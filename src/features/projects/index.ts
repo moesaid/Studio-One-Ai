@@ -9,6 +9,8 @@ export {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useUpdateScriptMutation,
+  useUpdatePersonaMutation,
 } from './hooks';
 export { useProjects } from './hooks';
 export { PROJECT_STATUS_CONFIG } from './constants';

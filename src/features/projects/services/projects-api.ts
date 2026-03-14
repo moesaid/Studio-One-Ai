@@ -13,7 +13,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
-import type { Project, CreateProjectPayload, UpdateProjectPayload } from '../types';
+import type { Project, CreateProjectPayload, UpdateProjectPayload, DirectorPersona } from '../types';
 
 const PROJECTS_COLLECTION = 'projects';
 
@@ -32,6 +32,8 @@ function docToProject(docSnap: { id: string; data: () => Record<string, unknown>
     title: (d.title as string) ?? '',
     description: (d.description as string) ?? '',
     status: (d.status as Project['status']) ?? 'draft',
+    script: (d.script as string) ?? '',
+    director_persona: (d.director_persona as DirectorPersona | null) ?? null,
     thumbnail_url: (d.thumbnail_url as string | null) ?? null,
     owner_id: (d.owner_id as string) ?? '',
     created_at:
@@ -62,6 +64,8 @@ export async function createProject(payload: CreateProjectPayload): Promise<{ da
     title: payload.title,
     description: payload.description,
     status: 'draft',
+    script: '',
+    director_persona: null,
     thumbnail_url: null,
     owner_id: uid,
     created_at: serverTimestamp(),
@@ -74,6 +78,8 @@ export async function createProject(payload: CreateProjectPayload): Promise<{ da
       title: payload.title,
       description: payload.description,
       status: 'draft' as const,
+      script: '',
+      director_persona: null,
       thumbnail_url: null,
       owner_id: uid,
       created_at: now,
@@ -97,6 +103,8 @@ export async function updateProject(payload: UpdateProjectPayload): Promise<{ da
       title: payload.title,
       description: payload.description,
       status: payload.status,
+      script: '',
+      director_persona: null,
       thumbnail_url: null,
       owner_id: uid,
       created_at: new Date().toISOString(),
@@ -115,4 +123,26 @@ export async function getProject(id: string): Promise<{ data: Project }> {
   const snap = await getDoc(ref);
   if (!snap.exists()) throw new Error('Project not found');
   return { data: docToProject(snap) };
+}
+
+export async function updateProjectScript(
+  id: string,
+  script: string
+): Promise<void> {
+  const ref = doc(db, PROJECTS_COLLECTION, id);
+  await updateDoc(ref, {
+    script,
+    updated_at: serverTimestamp(),
+  });
+}
+
+export async function updateProjectPersona(
+  id: string,
+  persona: DirectorPersona
+): Promise<void> {
+  const ref = doc(db, PROJECTS_COLLECTION, id);
+  await updateDoc(ref, {
+    director_persona: persona,
+    updated_at: serverTimestamp(),
+  });
 }

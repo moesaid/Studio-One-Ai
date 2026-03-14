@@ -1,9 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Pencil, Trash2 } from 'lucide-react';
+import { ArrowLeft, Clapperboard, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import type { Project } from '../types';
 import { PROJECT_STATUS_CONFIG } from '../constants';
 
@@ -11,18 +16,21 @@ interface ProjectNavProps {
   project: Project;
   onEdit: () => void;
   onDelete: () => void;
+  onChangeDirector: () => void;
 }
 
 export function ProjectNav({
   project,
   onEdit,
   onDelete,
+  onChangeDirector,
 }: ProjectNavProps) {
   const status = PROJECT_STATUS_CONFIG[project.status];
+  const persona = project.director_persona;
 
   return (
     <div className="flex h-12 shrink-0 items-center justify-between border-b border-border/50 px-3">
-      {/* Left — back + title */}
+      {/* Left — back + title + director */}
       <div className="flex items-center gap-2">
         <Link
           href="/studio"
@@ -39,10 +47,36 @@ export function ProjectNav({
         >
           {status.label}
         </Badge>
+
+        {/* Director persona indicator */}
+        {persona && (
+          <>
+            <div className="h-4 w-px bg-border/60 mx-0.5" />
+            <Tooltip>
+              <TooltipTrigger
+                onClick={onChangeDirector}
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors"
+              >
+                <Clapperboard className="h-3 w-3 text-violet-400/70" />
+                <span className="truncate max-w-[120px]">{persona.name}</span>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="max-w-[250px]">
+                <p className="font-medium text-xs">{persona.name}</p>
+                <p className="text-[10px] text-muted-foreground">{persona.style}</p>
+              </TooltipContent>
+            </Tooltip>
+          </>
+        )}
       </div>
 
       {/* Right — actions */}
       <div className="flex items-center gap-1.5">
+        {persona && (
+          <Button variant="ghost" size="sm" onClick={onChangeDirector} className="h-7 text-xs px-2">
+            <Clapperboard className="mr-1.5 h-3 w-3" />
+            Change Director
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={onEdit} className="h-7 text-xs px-2">
           <Pencil className="mr-1.5 h-3 w-3" />
           Edit

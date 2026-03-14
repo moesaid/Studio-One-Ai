@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { genai, IMAGE_MODEL } from '@/lib/genai';
+import { createGenAIClient, IMAGE_MODEL } from '@/lib/genai';
 
 export async function POST(request: NextRequest) {
   try {
+    const apiKey = request.headers.get('x-api-key');
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: 'API key is required. Add your Gemini key in Settings.' },
+        { status: 401 }
+      );
+    }
+
     const { prompt } = await request.json();
 
     if (!prompt || typeof prompt !== 'string') {
@@ -12,6 +20,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const genai = createGenAIClient(apiKey);
     const response = await genai.models.generateImages({
       model: IMAGE_MODEL,
       prompt,

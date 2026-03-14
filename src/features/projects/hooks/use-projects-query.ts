@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as api from '../services';
-import type { CreateProjectPayload, UpdateProjectPayload } from '../types';
+import type { CreateProjectPayload, UpdateProjectPayload, DirectorPersona } from '../types';
 
 export const projectQueryKeys = {
   all: ['projects'] as const,
@@ -70,6 +70,40 @@ export function useDeleteProjectMutation() {
     },
     onError: () => {
       toast.error('Failed to delete project');
+    },
+  });
+}
+
+export function useUpdateScriptMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, script }: { id: string; script: string }) =>
+      api.updateProjectScript(id, script),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.detail(variables.id),
+      });
+      toast.success('Script saved');
+    },
+    onError: () => {
+      toast.error('Failed to save script');
+    },
+  });
+}
+
+export function useUpdatePersonaMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, persona }: { id: string; persona: DirectorPersona }) =>
+      api.updateProjectPersona(id, persona),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.detail(variables.id),
+      });
+      toast.success('Director persona set');
+    },
+    onError: () => {
+      toast.error('Failed to set persona');
     },
   });
 }

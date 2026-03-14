@@ -13,7 +13,14 @@ export default function StudioLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const isProjectPage = /^\/studio\/[^/]+$/.test(pathname);
+  // Only collapse on dynamic project pages (/studio/[id]), not static routes
+  const STATIC_ROUTES = ['settings', 'generate', 'library'];
+  const segments = pathname.split('/');
+  const isProjectPage =
+    segments.length === 3 &&
+    segments[1] === 'studio' &&
+    !!segments[2] &&
+    !STATIC_ROUTES.includes(segments[2]);
   const [sidebarOpen, setSidebarOpen] = useState(!isProjectPage);
 
   // React to route changes — collapse on project pages, expand otherwise

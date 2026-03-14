@@ -1,13 +1,15 @@
 'use client';
 
-import { use, useState } from 'react';
+import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Clapperboard } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Badge } from '@/components/ui/badge';
 import {
   useProjectQuery,
   useUpdateProjectMutation,
   useDeleteProjectMutation,
+  useUpdatePersonaMutation,
   useProjects,
   ProjectDialog,
   DeleteProjectDialog,
@@ -17,12 +19,14 @@ import {
   PipelineSidebar,
   type PipelineStep,
 } from '@/features/projects/components/pipeline-sidebar';
+import { DirectorPersonaDialog } from '@/features/projects/components/director-persona-dialog';
 import { ScriptStep } from '@/features/projects/components/steps/script-step';
 import { CharactersStep } from '@/features/projects/components/steps/characters-step';
 import { ScenesStep } from '@/features/projects/components/steps/scenes-step';
 import { GenerateStep } from '@/features/projects/components/steps/generate-step';
 import { EditStep } from '@/features/projects/components/steps/edit-step';
 import { ExportStep } from '@/features/projects/components/steps/export-step';
+import type { DirectorPersona } from '@/features/projects/types';
 
 export default function ProjectDetailPage({
   params,
@@ -31,10 +35,12 @@ export default function ProjectDetailPage({
 }) {
   const { id } = use(params);
   const [activeStep, setActiveStep] = useState<PipelineStep>('script');
+  const [personaDialogOpen, setPersonaDialogOpen] = useState(false);
 
   const { data: project, isLoading, error } = useProjectQuery(id);
   const updateMutation = useUpdateProjectMutation();
   const deleteMutation = useDeleteProjectMutation();
+  const personaMutation = useUpdatePersonaMutation();
 
   const {
     editProject,
@@ -44,6 +50,26 @@ export default function ProjectDetailPage({
     openDelete,
     closeDelete,
   } = useProjects();
+
+  const hasPersona = !!project?.director_persona;
+
+  // Auto-open persona dialog when no persona is set
+  useEffect(() => {
+    if (project && !project.director_persona) {
+      setPersonaDialogOpen(true);
+    }
+  }, [project]);
+
+  function handlePersonaSelect(persona: DirectorPersona) {
+    personaMutation.mutate(
+      { id, persona },
+      {
+        onSuccess: () => {
+          setPersonaDialogOpen(false);
+        },
+      }
+    );
+  }
 
   if (isLoading) {
     return <WorkspaceSkeleton />;
@@ -76,23 +102,58 @@ export default function ProjectDetailPage({
         project={project}
         onEdit={() => openEdit(project)}
         onDelete={() => openDelete(project)}
+        onChangeDirector={() => setPersonaDialogOpen(true)}
       />
 
-      {/* Pipeline workspace */}
-      <div className="flex flex-1 overflow-hidden">
-        {/* Left — production pipeline sidebar */}
-        <PipelineSidebar activeStep={activeStep} onStepChange={setActiveStep} />
+      {/* Pipeline workspace — locked when no persona */}
+      {hasPersona ? (
+        <div className="flex flex-1 overflow-hidden">
+          {/* Left — production pipeline sidebar */}
+          <PipelineSidebar activeStep={activeStep} onStepChange={setActiveStep} />
 
-        {/* Right — step content */}
-        <div className="flex-1 overflow-hidden">
-          {activeStep === 'script' && <ScriptStep />}
-          {activeStep === 'characters' && <CharactersStep />}
-          {activeStep === 'scenes' && <ScenesStep />}
-          {activeStep === 'generate' && <GenerateStep />}
-          {activeStep === 'edit' && <EditStep />}
-          {activeStep === 'export' && <ExportStep />}
+          {/* Right — step content */}
+          <div className="flex-1 overflow-hidden">
+            {activeStep === 'script' && <ScriptStep project_id={id} initial_script={project.script ?? ''} />}
+            {activeStep === 'characters' && <CharactersStep />}
+            {activeStep === 'scenes' && <ScenesStep />}
+            {activeStep === 'generate' && <GenerateStep />}
+            {activeStep === 'edit' && <EditStep />}
+            {activeStep === 'export' && <ExportStep />}
+          </div>
         </div>
-      </div>
+      ) : (
+        /* Locked state — persona not set */
+        <div className="flex flex-1 items-center justify-center">
+          <div className="flex flex-col items-center gap-5 text-center max-w-md px-4">
+            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 ring-1 ring-violet-500/15">
+              <Clapperboard className="h-7 w-7 text-violet-400/70" strokeWidth={1.5} />
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold text-foreground">Choose Your Director</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Every project needs a Director Persona to guide AI in generating scripts, characters,
+                scenes, and visuals. Pick a preset style or create your own to get started.
+              </p>
+            </div>
+            <button
+              onClick={() => setPersonaDialogOpen(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+            >
+              <Clapperboard className="h-4 w-4" />
+              Select Director Persona
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Director Persona Dialog */}
+      <DirectorPersonaDialog
+        open={personaDialogOpen}
+        onClose={() => setPersonaDialogOpen(false)}
+        current_persona={project.director_persona}
+        onSelect={handlePersonaSelect}
+        is_loading={personaMutation.isPending}
+      />
 
       {/* Edit Dialog */}
       <ProjectDialog
