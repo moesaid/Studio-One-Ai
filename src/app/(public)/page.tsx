@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button';
 import { Film } from 'lucide-react';
+import Link from 'next/link';
 
 export default function HomePage() {
   return (
@@ -13,9 +14,11 @@ export default function HomePage() {
         Talk to your AI Director. Watch your movie come to life.
       </p>
 
-      <Button size="lg" variant="default">
-        Get Started
-      </Button>
+      <Link href="/login">
+        <Button size="lg" variant="default">
+          Get Started
+        </Button>
+      </Link>
     </main>
   );
 }

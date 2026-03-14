@@ -4,10 +4,10 @@ import type { NextRequest } from 'next/server';
 /**
  * Protected routes proxy (Next.js 16 convention).
  * Stub implementation — passes all requests through.
- * Replace with real auth checks once Firebase Auth is integrated.
+ * Client-side AuthGuard handles the actual redirect to /login.
  */
 
-const PROTECTED_PATHS = ['/dashboard', '/studio'];
+const PROTECTED_PATHS = ['/studio'];
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -17,16 +17,13 @@ export function proxy(request: NextRequest) {
   );
 
   if (isProtected) {
-    // TODO: Check for auth session / Firebase token
-    // const token = request.cookies.get('session')?.value;
-    // if (!token) {
-    //   return NextResponse.redirect(new URL('/login', request.url));
-    // }
+    // Client-side AuthGuard handles redirect to /login
+    // Server-side session checks can be added here in the future
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/studio/:path*'],
+  matcher: ['/studio/:path*'],
 };
