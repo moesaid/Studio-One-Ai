@@ -113,7 +113,7 @@ export default function ProjectDetailPage({
 
           {/* Right — step content */}
           <div className="flex-1 overflow-hidden">
-            {activeStep === 'script' && <ScriptStep project_id={id} initial_script={project.script ?? ''} />}
+            {activeStep === 'script' && <ScriptStep project_id={id} director_persona={project.director_persona} />}
             {activeStep === 'characters' && <CharactersStep />}
             {activeStep === 'scenes' && <ScenesStep />}
             {activeStep === 'generate' && <GenerateStep />}

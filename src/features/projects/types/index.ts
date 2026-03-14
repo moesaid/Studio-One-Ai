@@ -33,3 +33,28 @@ export interface UpdateProjectPayload {
   description: string;
   status: ProjectStatus;
 }
+
+export interface ScriptChapter {
+  id: string;
+  project_id: string;
+  parent_id: string | null;
+  title: string;
+  content: string;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateChapterPayload {
+  title: string;
+  content?: string;
+  parent_id?: string | null;
+  order?: number;
+}
+
+export interface UpdateChapterPayload {
+  id: string;
+  title?: string;
+  content?: string;
+  order?: number;
+}
