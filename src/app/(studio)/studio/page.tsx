@@ -1,27 +1,127 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Film, LogOut } from 'lucide-react';
-import { useAuth } from '@/features/auth';
+import { Skeleton } from '@/components/ui/skeleton';
+import {
+  ProjectCard,
+  ProjectDialog,
+  DeleteProjectDialog,
+  ProjectsHeader,
+  ProjectsEmptyState,
+  useProjectsQuery,
+  useCreateProjectMutation,
+  useUpdateProjectMutation,
+  useDeleteProjectMutation,
+  useProjects,
+} from '@/features/projects';
 
 export default function StudioPage() {
-  const { user, signOut } = useAuth();
+  const { data: projects, isLoading } = useProjectsQuery();
+  const createMutation = useCreateProjectMutation();
+  const updateMutation = useUpdateProjectMutation();
+  const deleteMutation = useDeleteProjectMutation();
+
+  const {
+    createOpen,
+    editProject,
+    deleteProject,
+    search,
+    setSearch,
+    openCreate,
+    closeCreate,
+    openEdit,
+    closeEdit,
+    openDelete,
+    closeDelete,
+    filterProjects,
+    formatDate,
+  } = useProjects();
+
+  const filtered = projects ? filterProjects(projects) : [];
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center space-y-6 px-4 text-center">
-      <div className="flex items-center gap-3">
-        <Film className="h-10 w-10 text-primary" />
-        <h1 className="text-4xl font-bold tracking-tight">Studio</h1>
-      </div>
+    <div className="space-y-6 p-6">
 
-      <p className="text-muted-foreground">
-        Welcome, <span className="font-medium text-foreground">{user?.displayName}</span>
-      </p>
+      {/* Header */}
+      <ProjectsHeader
+        search={search}
+        onSearchChange={setSearch}
+        onCreateClick={openCreate}
+      />
 
-      <Button variant="outline" onClick={signOut}>
-        <LogOut className="mr-2 h-4 w-4" />
-        Sign Out
-      </Button>
-    </main>
+      {/* Content */}
+      {isLoading ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="overflow-hidden rounded-xl border border-border">
+              {/* Thumbnail skeleton */}
+              <Skeleton className="aspect-video w-full rounded-none" />
+              {/* Content skeleton */}
+              <div className="space-y-3 p-4">
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-4 w-16 rounded-full" />
+                <div className="space-y-1.5">
+                  <Skeleton className="h-3.5 w-full" />
+                  <Skeleton className="h-3.5 w-2/3" />
+                </div>
+                <div className="border-t border-border/50 pt-3">
+                  <Skeleton className="h-3 w-24" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <ProjectsEmptyState
+          onCreateClick={openCreate}
+          hasSearch={!!search.trim()}
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {filtered.map((project) => (
+            <ProjectCard
+              key={project.id}
+              project={project}
+              onEdit={openEdit}
+              onDelete={openDelete}
+              formatDate={formatDate}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Create Dialog */}
+      <ProjectDialog
+        open={createOpen}
+        onClose={closeCreate}
+        onCreateSubmit={(payload) => {
+          createMutation.mutate(payload, { onSuccess: closeCreate });
+        }}
+        isLoading={createMutation.isPending}
+      />
+
+      {/* Edit Dialog */}
+      <ProjectDialog
+        open={!!editProject}
+        onClose={closeEdit}
+        project={editProject}
+        onEditSubmit={(payload) => {
+          updateMutation.mutate(payload, { onSuccess: closeEdit });
+        }}
+        isLoading={updateMutation.isPending}
+      />
+
+      {/* Delete Dialog */}
+      <DeleteProjectDialog
+        open={!!deleteProject}
+        onClose={closeDelete}
+        project={deleteProject}
+        onConfirm={() => {
+          if (deleteProject) {
+            deleteMutation.mutate(deleteProject.id, { onSuccess: closeDelete });
+          }
+        }}
+        isLoading={deleteMutation.isPending}
+      />
+    </div>
   );
 }
