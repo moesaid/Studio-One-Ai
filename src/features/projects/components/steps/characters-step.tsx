@@ -1,56 +1,158 @@
 'use client';
 
-import { Users, Plus, UserPlus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import {
+  ReactFlow,
+  Background,
+  BackgroundVariant,
+  Controls,
+  MiniMap,
+  ReactFlowProvider,
+  ConnectionLineType,
+  type OnNodesChange,
+  type OnEdgesChange,
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 
-export function CharactersStep() {
+import { Loader2 } from 'lucide-react';
+import { useCharactersCanvas } from '@/features/projects/hooks';
+import type { CharactersStepProps } from '@/features/projects/types';
+
+import {
+  nodeTypes,
+  CharacterFormDialog,
+  CharacterDeleteDialog,
+  CharacterExtractDialog,
+  CharactersEmptyState,
+  CharactersToolbar,
+  CharactersQuickNav,
+  CharactersShortcutsPanel,
+  CharactersRoleLegend,
+} from '../characters';
+
+/* ─── Public Wrapper ─────────────────────────────────────────── */
+
+export function CharactersStep(props: CharactersStepProps) {
+  return (
+    <ReactFlowProvider>
+      <CharactersStepInner {...props} />
+    </ReactFlowProvider>
+  );
+}
+
+/* ─── Inner (pure render) ────────────────────────────────────── */
+
+function CharactersStepInner({ project_id, director_persona }: CharactersStepProps) {
+  const canvas = useCharactersCanvas({ project_id, director_persona });
+
+  /* ── Loading ── */
+  if (canvas.isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  /* ── Empty state ── */
+  if (canvas.sortedCharacters.length === 0) {
+    return (
+      <CharactersEmptyState
+        hasChapters={canvas.chapters.length > 0}
+        extractLoading={canvas.extractLoading}
+        extractStep={canvas.extractStep}
+        onExtract={canvas.handleExtractFromScript}
+        onAdd={canvas.openCreateForm}
+        formOpen={canvas.formOpen}
+        onFormOpenChange={canvas.setFormOpen}
+        editingCharacter={canvas.editingCharacter}
+        formData={canvas.formData}
+        setFormData={canvas.setFormData}
+        onFormSubmit={canvas.handleFormSubmit}
+        isFormPending={canvas.isFormPending}
+      />
+    );
+  }
+
+  /* ── Canvas ── */
   return (
     <div className="flex h-full flex-col">
-      {/* Step header */}
-      <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-violet-500/10">
-            <Users className="h-4 w-4 text-violet-400" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Characters</h2>
-            <p className="text-xs text-muted-foreground">Define your cast</p>
-          </div>
-        </div>
-        <Button size="sm">
-          <Plus className="mr-2 h-3.5 w-3.5" />
-          Add Character
-        </Button>
+      <div className="flex-1 relative">
+        <ReactFlow
+          nodes={canvas.nodes}
+          edges={canvas.edges}
+          onNodesChange={canvas.onNodesChange as OnNodesChange}
+          onEdgesChange={canvas.onEdgesChange as OnEdgesChange}
+          onNodeDragStop={canvas.onNodeDragStop}
+          onNodeDoubleClick={canvas.onNodeDoubleClick}
+          nodeTypes={nodeTypes}
+          fitView
+          fitViewOptions={{ padding: 0.3, maxZoom: 1 }}
+          minZoom={0.15}
+          maxZoom={1.5}
+          connectionLineType={ConnectionLineType.SmoothStep}
+          deleteKeyCode={null}
+          proOptions={{ hideAttribution: true }}
+          className="characters-flow"
+        >
+          <Background variant={BackgroundVariant.Dots} gap={18} size={1.5} color="rgba(255,255,255,0.25)" />
+          <Controls
+            showInteractive={false}
+            className="!bg-card/90 !border-border/30 !rounded-lg !shadow-lg !shadow-black/10 [&>button]:!bg-transparent [&>button]:!border-border/20 [&>button]:!text-foreground/60 [&>button:hover]:!bg-muted/50"
+          />
+          <MiniMap
+            nodeColor={canvas.minimapColor}
+            maskColor="rgba(0,0,0,0.7)"
+            className="!bg-card/80 !border-border/30 !rounded-lg !shadow-lg"
+            pannable
+            zoomable
+          />
+
+          <CharactersToolbar
+            characterCount={canvas.characters.length}
+            hasChapters={canvas.chapters.length > 0}
+            extractLoading={canvas.extractLoading}
+            onExtract={canvas.handleExtractFromScript}
+            onAdd={canvas.openCreateForm}
+            onReorganize={canvas.handleReorganize}
+          />
+
+          <CharactersQuickNav
+            characters={canvas.sortedCharacters}
+            onNavigate={canvas.navigateToNode}
+          />
+
+          <CharactersRoleLegend characters={canvas.sortedCharacters} />
+
+          <CharactersShortcutsPanel
+            showHelp={canvas.showHelp}
+            onToggleHelp={() => canvas.setShowHelp((v) => !v)}
+          />
+        </ReactFlow>
       </div>
 
-      {/* Characters content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="mx-auto max-w-4xl">
-          <Card className="py-0">
-            <CardContent className="pt-8 pb-8">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 ring-1 ring-violet-500/10">
-                  <UserPlus className="h-6 w-6 text-violet-400/70" strokeWidth={1.5} />
-                </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Create Your Characters
-                  </h3>
-                  <p className="max-w-sm text-xs text-muted-foreground leading-relaxed">
-                    Define each character&apos;s appearance, personality, and voice.
-                    These will be used to generate consistent visuals across your scenes.
-                  </p>
-                </div>
-                <Button size="sm" className="mt-2">
-                  <UserPlus className="mr-2 h-3.5 w-3.5" />
-                  Create First Character
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Dialogs */}
+      <CharacterFormDialog
+        open={canvas.formOpen}
+        onOpenChange={canvas.setFormOpen}
+        editingCharacter={canvas.editingCharacter}
+        formData={canvas.formData}
+        setFormData={canvas.setFormData}
+        onSubmit={canvas.handleFormSubmit}
+        isPending={canvas.isFormPending}
+      />
+
+      <CharacterDeleteDialog
+        open={canvas.deleteDialogOpen}
+        onOpenChange={canvas.setDeleteDialogOpen}
+        targets={canvas.deleteTargets}
+        onConfirm={canvas.handleDelete}
+        isDeleting={canvas.bulkDeleting}
+      />
+
+      <CharacterExtractDialog
+        open={canvas.extractLoading}
+        currentStep={canvas.extractStep}
+      />
     </div>
   );
 }

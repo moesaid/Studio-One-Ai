@@ -2,7 +2,7 @@
 
 import { use, useState, useEffect } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Clapperboard } from 'lucide-react';
+import { ArrowLeft, Clapperboard, Palette, ArrowRight } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -10,6 +10,7 @@ import {
   useUpdateProjectMutation,
   useDeleteProjectMutation,
   useUpdatePersonaMutation,
+  useUpdateStyleMutation,
   useProjects,
   ProjectDialog,
   DeleteProjectDialog,
@@ -20,13 +21,14 @@ import {
   type PipelineStep,
 } from '@/features/projects/components/pipeline-sidebar';
 import { DirectorPersonaDialog } from '@/features/projects/components/director-persona-dialog';
+import { FilmStyleDialog } from '@/features/projects/components/film-style-dialog';
 import { ScriptStep } from '@/features/projects/components/steps/script-step';
 import { CharactersStep } from '@/features/projects/components/steps/characters-step';
 import { ScenesStep } from '@/features/projects/components/steps/scenes-step';
 import { GenerateStep } from '@/features/projects/components/steps/generate-step';
 import { EditStep } from '@/features/projects/components/steps/edit-step';
 import { ExportStep } from '@/features/projects/components/steps/export-step';
-import type { DirectorPersona } from '@/features/projects/types';
+import type { DirectorPersona, FilmStyle } from '@/features/projects/types';
 
 export default function ProjectDetailPage({
   params,
@@ -36,11 +38,13 @@ export default function ProjectDetailPage({
   const { id } = use(params);
   const [activeStep, setActiveStep] = useState<PipelineStep>('script');
   const [personaDialogOpen, setPersonaDialogOpen] = useState(false);
+  const [styleDialogOpen, setStyleDialogOpen] = useState(false);
 
   const { data: project, isLoading, error } = useProjectQuery(id);
   const updateMutation = useUpdateProjectMutation();
   const deleteMutation = useDeleteProjectMutation();
   const personaMutation = useUpdatePersonaMutation();
+  const styleMutation = useUpdateStyleMutation();
 
   const {
     editProject,
@@ -52,11 +56,19 @@ export default function ProjectDetailPage({
   } = useProjects();
 
   const hasPersona = !!project?.director_persona;
+  const hasStyle = !!project?.film_style;
+  const isSetupComplete = hasPersona && hasStyle;
 
-  // Auto-open persona dialog when no persona is set
+  // Derive setup step: 1 = director, 2 = style
+  const setupStep = !hasPersona ? 1 : !hasStyle ? 2 : 0;
+
+  // Auto-open setup dialogs when project loads
   useEffect(() => {
-    if (project && !project.director_persona) {
+    if (!project) return;
+    if (!project.director_persona) {
       setPersonaDialogOpen(true);
+    } else if (!project.film_style) {
+      setStyleDialogOpen(true);
     }
   }, [project]);
 
@@ -66,6 +78,21 @@ export default function ProjectDetailPage({
       {
         onSuccess: () => {
           setPersonaDialogOpen(false);
+          // Auto-open style dialog after selecting director
+          if (!project?.film_style) {
+            setTimeout(() => setStyleDialogOpen(true), 300);
+          }
+        },
+      }
+    );
+  }
+
+  function handleStyleSelect(style: FilmStyle) {
+    styleMutation.mutate(
+      { id, style },
+      {
+        onSuccess: () => {
+          setStyleDialogOpen(false);
         },
       }
     );
@@ -103,10 +130,11 @@ export default function ProjectDetailPage({
         onEdit={() => openEdit(project)}
         onDelete={() => openDelete(project)}
         onChangeDirector={() => setPersonaDialogOpen(true)}
+        onChangeStyle={() => setStyleDialogOpen(true)}
       />
 
-      {/* Pipeline workspace — locked when no persona */}
-      {hasPersona ? (
+      {/* Pipeline workspace — locked until setup is complete */}
+      {isSetupComplete ? (
         <div className="flex flex-1 overflow-hidden">
           {/* Left — production pipeline sidebar */}
           <PipelineSidebar activeStep={activeStep} onStepChange={setActiveStep} />
@@ -114,7 +142,7 @@ export default function ProjectDetailPage({
           {/* Right — step content */}
           <div className="flex-1 overflow-hidden">
             {activeStep === 'script' && <ScriptStep project_id={id} director_persona={project.director_persona} />}
-            {activeStep === 'characters' && <CharactersStep />}
+            {activeStep === 'characters' && <CharactersStep project_id={id} director_persona={project.director_persona} />}
             {activeStep === 'scenes' && <ScenesStep />}
             {activeStep === 'generate' && <GenerateStep />}
             {activeStep === 'edit' && <EditStep />}
@@ -122,26 +150,70 @@ export default function ProjectDetailPage({
           </div>
         </div>
       ) : (
-        /* Locked state — persona not set */
+        /* 2-step setup — director + style */
         <div className="flex flex-1 items-center justify-center">
-          <div className="flex flex-col items-center gap-5 text-center max-w-md px-4">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 ring-1 ring-violet-500/15">
-              <Clapperboard className="h-7 w-7 text-violet-400/70" strokeWidth={1.5} />
+          <div className="flex flex-col items-center gap-6 text-center max-w-lg px-4">
+            {/* Step indicators */}
+            <div className="flex items-center gap-3">
+              <StepIndicator
+                step={1}
+                label="Director"
+                icon={<Clapperboard className="h-4 w-4" />}
+                isComplete={hasPersona}
+                isActive={setupStep === 1}
+              />
+              <ArrowRight className="h-4 w-4 text-muted-foreground/40" />
+              <StepIndicator
+                step={2}
+                label="Film Style"
+                icon={<Palette className="h-4 w-4" />}
+                isComplete={hasStyle}
+                isActive={setupStep === 2}
+              />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-lg font-semibold text-foreground">Choose Your Director</h3>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                Every project needs a Director Persona to guide AI in generating scripts, characters,
-                scenes, and visuals. Pick a preset style or create your own to get started.
-              </p>
-            </div>
-            <button
-              onClick={() => setPersonaDialogOpen(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
-            >
-              <Clapperboard className="h-4 w-4" />
-              Select Director Persona
-            </button>
+
+            {/* Current step content */}
+            {setupStep === 1 ? (
+              <>
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500/10 to-purple-500/5 ring-1 ring-violet-500/15">
+                  <Clapperboard className="h-7 w-7 text-violet-400/70" strokeWidth={1.5} />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-foreground">Step 1: Choose Your Director</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Every project needs a Director Persona to guide AI in generating scripts, characters,
+                    scenes, and visuals. Pick a preset style or create your own.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setPersonaDialogOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+                >
+                  <Clapperboard className="h-4 w-4" />
+                  Select Director Persona
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 ring-1 ring-amber-500/15">
+                  <Palette className="h-7 w-7 text-amber-400/70" strokeWidth={1.5} />
+                </div>
+                <div className="space-y-2">
+                  <h3 className="text-lg font-semibold text-foreground">Step 2: Choose Your Film Style</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Your Film Style defines the visual tone for all AI-generated images and videos — from
+                    cinematic noir to anime watercolor. Choose a preset or create a custom look.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStyleDialogOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground shadow-sm hover:bg-primary/90 transition-colors"
+                >
+                  <Palette className="h-4 w-4" />
+                  Select Film Style
+                </button>
+              </>
+            )}
           </div>
         </div>
       )}
@@ -153,6 +225,15 @@ export default function ProjectDetailPage({
         current_persona={project.director_persona}
         onSelect={handlePersonaSelect}
         is_loading={personaMutation.isPending}
+      />
+
+      {/* Film Style Dialog */}
+      <FilmStyleDialog
+        open={styleDialogOpen}
+        onClose={() => setStyleDialogOpen(false)}
+        current_style={project.film_style}
+        onSelect={handleStyleSelect}
+        is_loading={styleMutation.isPending}
       />
 
       {/* Edit Dialog */}
@@ -183,6 +264,40 @@ export default function ProjectDetailPage({
         }}
         isLoading={deleteMutation.isPending}
       />
+    </div>
+  );
+}
+
+/* ── Step indicator for the 2-step setup ── */
+function StepIndicator({
+  step,
+  label,
+  icon,
+  isComplete,
+  isActive,
+}: {
+  step: number;
+  label: string;
+  icon: React.ReactNode;
+  isComplete: boolean;
+  isActive: boolean;
+}) {
+  return (
+    <div
+      className={`flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium transition-all ${
+        isComplete
+          ? 'bg-emerald-500/10 text-emerald-400 ring-1 ring-emerald-500/20'
+          : isActive
+            ? 'bg-primary/10 text-primary ring-1 ring-primary/20'
+            : 'bg-muted/50 text-muted-foreground'
+      }`}
+    >
+      <span className="flex h-5 w-5 items-center justify-center text-[11px]">
+        {isComplete ? '✓' : icon}
+      </span>
+      <span className="hidden sm:inline">
+        {step}. {label}
+      </span>
     </div>
   );
 }

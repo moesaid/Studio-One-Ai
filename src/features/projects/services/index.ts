@@ -1,3 +1,5 @@
-export { getProjects, getProject, createProject, updateProject, deleteProject, updateProjectScript, updateProjectPersona } from './projects-api';
+export { getProjects, getProject, createProject, updateProject, deleteProject, updateProjectScript, updateProjectPersona, updateProjectStyle } from './projects-api';
 export { getChapters, createChapter, updateChapter, deleteChapter, reorderChapters, batchCreateChapters } from './chapters-api';
 export type { GeneratedChapter } from './chapters-api';
+export { getCharacters, createCharacter, updateCharacter, deleteCharacter, batchCreateCharacters } from './characters-api';
+export type { GeneratedCharacter } from './characters-api';

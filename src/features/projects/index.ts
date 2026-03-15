@@ -11,7 +11,8 @@ export {
   useDeleteProjectMutation,
   useUpdateScriptMutation,
   useUpdatePersonaMutation,
+  useUpdateStyleMutation,
 } from './hooks';
 export { useProjects } from './hooks';
 export { PROJECT_STATUS_CONFIG } from './constants';
-export type { Project, CreateProjectPayload, UpdateProjectPayload } from './types';
+export type { Project, CreateProjectPayload, UpdateProjectPayload, FilmStyle } from './types';

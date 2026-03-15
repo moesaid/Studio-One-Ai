@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as api from '../services';
-import type { CreateProjectPayload, UpdateProjectPayload, DirectorPersona } from '../types';
+import type { CreateProjectPayload, UpdateProjectPayload, DirectorPersona, FilmStyle } from '../types';
 
 export const projectQueryKeys = {
   all: ['projects'] as const,
@@ -104,6 +104,23 @@ export function useUpdatePersonaMutation() {
     },
     onError: () => {
       toast.error('Failed to set persona');
+    },
+  });
+}
+
+export function useUpdateStyleMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, style }: { id: string; style: FilmStyle }) =>
+      api.updateProjectStyle(id, style),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: projectQueryKeys.detail(variables.id),
+      });
+      toast.success('Film style set');
+    },
+    onError: () => {
+      toast.error('Failed to set film style');
     },
   });
 }

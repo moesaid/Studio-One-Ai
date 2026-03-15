@@ -15,6 +15,12 @@ service cloud.firestore {
         allow read, write: if request.auth != null
                            && get(/databases/$(database)/documents/projects/$(projectId)).data.owner_id == request.auth.uid;
       }
+
+      // Characters subcollection — same owner check via parent project
+      match /characters/{characterId} {
+        allow read, write: if request.auth != null
+                           && get(/databases/$(database)/documents/projects/$(projectId)).data.owner_id == request.auth.uid;
+      }
     }
   }
 }

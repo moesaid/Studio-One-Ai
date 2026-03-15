@@ -13,7 +13,7 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebase';
-import type { Project, CreateProjectPayload, UpdateProjectPayload, DirectorPersona } from '../types';
+import type { Project, CreateProjectPayload, UpdateProjectPayload, DirectorPersona, FilmStyle } from '../types';
 
 const PROJECTS_COLLECTION = 'projects';
 
@@ -34,6 +34,7 @@ function docToProject(docSnap: { id: string; data: () => Record<string, unknown>
     status: (d.status as Project['status']) ?? 'draft',
     script: (d.script as string) ?? '',
     director_persona: (d.director_persona as DirectorPersona | null) ?? null,
+    film_style: (d.film_style as FilmStyle | null) ?? null,
     thumbnail_url: (d.thumbnail_url as string | null) ?? null,
     owner_id: (d.owner_id as string) ?? '',
     created_at:
@@ -66,6 +67,7 @@ export async function createProject(payload: CreateProjectPayload): Promise<{ da
     status: 'draft',
     script: '',
     director_persona: null,
+    film_style: null,
     thumbnail_url: null,
     owner_id: uid,
     created_at: serverTimestamp(),
@@ -80,6 +82,7 @@ export async function createProject(payload: CreateProjectPayload): Promise<{ da
       status: 'draft' as const,
       script: '',
       director_persona: null,
+      film_style: null,
       thumbnail_url: null,
       owner_id: uid,
       created_at: now,
@@ -105,6 +108,7 @@ export async function updateProject(payload: UpdateProjectPayload): Promise<{ da
       status: payload.status,
       script: '',
       director_persona: null,
+      film_style: null,
       thumbnail_url: null,
       owner_id: uid,
       created_at: new Date().toISOString(),
@@ -143,6 +147,17 @@ export async function updateProjectPersona(
   const ref = doc(db, PROJECTS_COLLECTION, id);
   await updateDoc(ref, {
     director_persona: persona,
+    updated_at: serverTimestamp(),
+  });
+}
+
+export async function updateProjectStyle(
+  id: string,
+  style: FilmStyle
+): Promise<void> {
+  const ref = doc(db, PROJECTS_COLLECTION, id);
+  await updateDoc(ref, {
+    film_style: style,
     updated_at: serverTimestamp(),
   });
 }
