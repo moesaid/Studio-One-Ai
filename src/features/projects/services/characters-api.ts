@@ -38,6 +38,7 @@ function docToCharacter(
     arc: (d.arc as string) ?? '',
     voice: (d.voice as string) ?? '',
     relationships: (d.relationships as Character['relationships']) ?? [],
+    reference_images: (d.reference_images as string[]) ?? [],
     order: (d.order as number) ?? 0,
     created_at:
       d.created_at instanceof Timestamp
@@ -73,6 +74,7 @@ export async function createCharacter(
     arc: payload.arc ?? '',
     voice: payload.voice ?? '',
     relationships: payload.relationships ?? [],
+    reference_images: payload.reference_images ?? [],
     order: payload.order ?? 0,
     created_at: serverTimestamp(),
     updated_at: serverTimestamp(),
@@ -94,6 +96,7 @@ export async function createCharacter(
       arc: payload.arc ?? '',
       voice: payload.voice ?? '',
       relationships: payload.relationships ?? [],
+      reference_images: payload.reference_images ?? [],
       order: payload.order ?? 0,
       created_at: now,
       updated_at: now,
@@ -153,6 +156,7 @@ export async function batchCreateCharacters(
       arc: ch.arc || '',
       voice: ch.voice || '',
       relationships: ch.relationships || [],
+      reference_images: [],
       order: idx,
       created_at: serverTimestamp(),
       updated_at: serverTimestamp(),

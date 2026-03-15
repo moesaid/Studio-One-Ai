@@ -1,7 +1,13 @@
 'use client';
 
 import { Panel } from '@xyflow/react';
+import { ImageIcon } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { ROLE_CONFIG } from '@/features/projects/constants/characters';
 import type { Character } from '@/features/projects/types';
 
@@ -22,6 +28,7 @@ export function CharactersQuickNav({ characters, onNavigate }: CharactersQuickNa
             {characters.map((ch) => {
               const role = ROLE_CONFIG[ch.role] ?? ROLE_CONFIG.other;
               const nodeId = `char-${ch.id}`;
+              const hasImages = ch.reference_images && ch.reference_images.length > 0;
               return (
                 <button
                   key={ch.id}
@@ -31,7 +38,20 @@ export function CharactersQuickNav({ characters, onNavigate }: CharactersQuickNa
                 >
                   <div className={`h-2 w-2 rounded-full bg-gradient-to-r ${role.accent} flex-shrink-0`} />
                   <span className="text-[11px] text-foreground/80 truncate">{ch.name}</span>
-                  <span className={`text-[9px] ml-auto flex-shrink-0 ${role.text} opacity-60`}>{role.label}</span>
+                  <Tooltip>
+                    <TooltipTrigger className="ml-auto flex-shrink-0">
+                        {hasImages ? (
+                          <ImageIcon className="h-3 w-3 text-emerald-400" />
+                        ) : (
+                          <ImageIcon className="h-3 w-3 text-muted-foreground/30" />
+                        )}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="text-[10px]">
+                      {hasImages
+                        ? `${ch.reference_images.length} reference image${ch.reference_images.length > 1 ? 's' : ''}`
+                        : 'No reference images'}
+                    </TooltipContent>
+                  </Tooltip>
                 </button>
               );
             })}

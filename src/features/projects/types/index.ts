@@ -96,6 +96,7 @@ export interface Character {
   arc: string;
   voice: string;
   relationships: CharacterRelationship[];
+  reference_images: string[];
   order: number;
   created_at: string;
   updated_at: string;
@@ -114,6 +115,7 @@ export interface CreateCharacterPayload {
   arc?: string;
   voice?: string;
   relationships?: CharacterRelationship[];
+  reference_images?: string[];
   order?: number;
 }
 
@@ -130,6 +132,7 @@ export interface UpdateCharacterPayload {
   arc?: string;
   voice?: string;
   relationships?: CharacterRelationship[];
+  reference_images?: string[];
   order?: number;
 }
 
