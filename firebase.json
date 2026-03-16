@@ -27,5 +27,8 @@
         "supportEmail": "masedup@gmail.com"
       }
     }
+  },
+  "storage": {
+    "rules": "storage.rules"
   }
 }

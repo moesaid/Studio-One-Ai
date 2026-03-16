@@ -82,3 +82,63 @@ export async function generateImage(
 
   return res.json();
 }
+
+/* ── Character Visuals ── */
+
+export interface GenerateCharacterVisualsPayload {
+  appearance: string;
+  gender?: string;
+  age?: number;
+  species?: string;
+  director_instruction?: string;
+  film_style_prompt?: string;
+  expressions?: string[];
+  custom_instruction?: string;
+}
+
+export interface GeneratedVisualImage {
+  image_bytes: string;
+  mime_type: string;
+  expression: string;
+}
+
+export interface GenerateCharacterVisualsResponse {
+  images: GeneratedVisualImage[];
+  count: number;
+}
+
+/**
+ * Generate character visuals via Imagen API.
+ * Produces 4 images with consistent character description across expressions.
+ */
+export async function generateCharacterVisuals(
+  payload: GenerateCharacterVisualsPayload
+): Promise<{ data: GenerateCharacterVisualsResponse }> {
+  const apiKey = getGeminiKey();
+
+  const res = await fetch('/api/ai/generate-character-visuals', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': apiKey,
+    },
+    body: JSON.stringify({
+      appearance: payload.appearance,
+      gender: payload.gender,
+      age: payload.age,
+      species: payload.species,
+      directorInstruction: payload.director_instruction,
+      filmStylePrompt: payload.film_style_prompt,
+      expressions: payload.expressions,
+      customInstruction: payload.custom_instruction,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to generate character visuals');
+  }
+
+  return res.json();
+}
+

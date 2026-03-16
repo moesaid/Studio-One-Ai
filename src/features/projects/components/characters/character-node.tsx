@@ -1,7 +1,7 @@
 'use client';
 
 import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
-import { Pencil, Trash2, RefreshCw, Loader2 } from 'lucide-react';
+import { Pencil, Trash2, RefreshCw, Loader2, ImagePlus, Sparkles } from 'lucide-react';
 import { ROLE_CONFIG } from '@/features/projects/constants/characters';
 import type { CharacterNodeData } from '@/features/projects/types';
 
@@ -9,6 +9,8 @@ export function CharacterNode({ data, selected }: NodeProps<Node<CharacterNodeDa
   const ch = data.character;
   const role = ROLE_CONFIG[ch.role] ?? ROLE_CONFIG.other;
   const isRegenerating = data.regeneratingId === ch.id;
+  const images = ch.reference_images ?? [];
+  const hasVisuals = images.length > 0;
 
   return (
     <div className={`group rounded-2xl border-2 bg-card/95 backdrop-blur-xl shadow-2xl shadow-black/20 overflow-hidden w-[300px] ring-1 transition-all duration-150 hover:shadow-black/30 ${selected ? 'border-violet-500 ring-violet-500/40 shadow-violet-500/10' : `border-border/20 ${role.ring}`}`}>
@@ -27,6 +29,9 @@ export function CharacterNode({ data, selected }: NodeProps<Node<CharacterNodeDa
 
       {/* Hover actions */}
       <div className="absolute top-2.5 right-2.5 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+        <button type="button" onClick={() => data.onOpenVisuals(ch)} className="h-6 w-6 flex items-center justify-center rounded-md bg-card/90 border border-border/30 text-muted-foreground hover:text-violet-400 transition-colors shadow-sm">
+          <ImagePlus className="h-3 w-3" />
+        </button>
         <button type="button" onClick={() => data.onEdit(ch)} className="h-6 w-6 flex items-center justify-center rounded-md bg-card/90 border border-border/30 text-muted-foreground hover:text-foreground transition-colors shadow-sm">
           <Pencil className="h-3 w-3" />
         </button>
@@ -43,6 +48,63 @@ export function CharacterNode({ data, selected }: NodeProps<Node<CharacterNodeDa
         <div>
           <h3 className="font-bold text-[13px] text-foreground tracking-tight leading-tight">{ch.name}</h3>
           <span className={`text-[9px] font-semibold uppercase tracking-[0.15em] ${role.text}`}>{role.label}</span>
+          {(ch.species || ch.gender || ch.age) && (
+            <div className="flex items-center gap-1 mt-1 flex-wrap">
+              {ch.species && (
+                <span className={`rounded-full border px-2 py-0.5 text-[9px] font-medium ${ch.species === 'animal' ? 'border-amber-500/20 bg-amber-500/8 text-amber-300/80' : 'border-emerald-500/20 bg-emerald-500/8 text-emerald-300/80'}`}>
+                  {ch.species === 'animal' ? '🐾 Animal' : '🧑 Human'}
+                </span>
+              )}
+              {ch.gender && (
+                <span className={`rounded-full border px-2 py-0.5 text-[9px] font-medium ${ch.gender === 'female' ? 'border-pink-500/20 bg-pink-500/8 text-pink-300/80' : 'border-blue-500/20 bg-blue-500/8 text-blue-300/80'}`}>
+                  {ch.gender === 'female' ? '♀ Female' : '♂ Male'}
+                </span>
+              )}
+              {ch.age && (
+                <span className="rounded-full border border-border/30 bg-muted/30 px-2 py-0.5 text-[9px] font-medium text-muted-foreground">
+                  {ch.age} yrs
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Character Visuals — right under header */}
+        <div className="rounded-xl border border-border/20 bg-muted/5 px-2.5 py-2">
+          {hasVisuals ? (
+            <button
+              type="button"
+              onClick={() => data.onOpenVisuals(ch)}
+              className="w-full flex items-center gap-2 cursor-pointer group/visuals"
+            >
+              <div className="flex -space-x-2">
+                {images.slice(0, 4).map((url, i) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={i}
+                    src={url}
+                    alt=""
+                    className="h-7 w-7 rounded-lg object-cover border-2 border-card"
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] text-muted-foreground group-hover/visuals:text-foreground/70 transition-colors">
+                {images.length} visual{images.length > 1 ? 's' : ''}
+              </span>
+              <Sparkles className="h-3 w-3 ml-auto text-emerald-400/60" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => data.onOpenVisuals(ch)}
+              className="w-full flex items-center gap-2 text-muted-foreground/40 hover:text-muted-foreground/70 transition-colors cursor-pointer"
+            >
+              <div className="h-7 w-7 rounded-lg border-2 border-dashed border-border/30 flex items-center justify-center">
+                <ImagePlus className="h-3 w-3" />
+              </div>
+              <span className="text-[10px]">Add visuals</span>
+            </button>
+          )}
         </div>
 
         {/* Description */}

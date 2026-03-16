@@ -8,4 +8,5 @@ export { CharactersToolbar } from './characters-toolbar';
 export { CharactersQuickNav } from './characters-quick-nav';
 export { CharactersShortcutsPanel } from './characters-shortcuts-panel';
 export { CharactersRoleLegend } from './characters-role-legend';
+export { CharacterVisualsDialog } from './character-visuals-dialog';
 export { buildGraph, nodeTypes } from './build-character-graph';

@@ -22,6 +22,7 @@ import {
   CharacterFormDialog,
   CharacterDeleteDialog,
   CharacterExtractDialog,
+  CharacterVisualsDialog,
   CharactersEmptyState,
   CharactersToolbar,
   CharactersQuickNav,
@@ -41,8 +42,15 @@ export function CharactersStep(props: CharactersStepProps) {
 
 /* ─── Inner (pure render) ────────────────────────────────────── */
 
-function CharactersStepInner({ project_id, director_persona }: CharactersStepProps) {
+function CharactersStepInner({ project_id, director_persona, film_style }: CharactersStepProps) {
   const canvas = useCharactersCanvas({ project_id, director_persona });
+
+  // Build a project-like object for the visuals dialog
+  const projectForDialog = {
+    id: project_id,
+    director_persona,
+    film_style,
+  } as import('@/features/projects/types').Project;
 
   /* ── Loading ── */
   if (canvas.isLoading) {
@@ -152,6 +160,13 @@ function CharactersStepInner({ project_id, director_persona }: CharactersStepPro
       <CharacterExtractDialog
         open={canvas.extractLoading}
         currentStep={canvas.extractStep}
+      />
+
+      <CharacterVisualsDialog
+        character={canvas.visualsCharacter}
+        project={projectForDialog}
+        open={canvas.visualsOpen}
+        onOpenChange={canvas.setVisualsOpen}
       />
     </div>
   );

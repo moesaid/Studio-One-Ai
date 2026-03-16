@@ -57,7 +57,7 @@ export function useCharactersCanvas({ project_id, director_persona }: UseCharact
   const [formOpen, setFormOpen] = useState(false);
   const [editingCharacter, setEditingCharacter] = useState<Character | null>(null);
   const [formData, setFormData] = useState<CreateCharacterPayload>({
-    name: '', role: 'other', description: '', traits: [], motivations: [], flaws: [],
+    name: '', gender: 'male', age: 25, species: 'human', role: 'other', description: '', traits: [], motivations: [], flaws: [],
     appearance: '', backstory: '', vibe: '', arc: '', voice: '', relationships: [],
   });
 
@@ -74,6 +74,10 @@ export function useCharactersCanvas({ project_id, director_persona }: UseCharact
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
   const [showHelp, setShowHelp] = useState(false);
 
+  /* ── Visuals dialog state ── */
+  const [visualsOpen, setVisualsOpen] = useState(false);
+  const [visualsCharacter, setVisualsCharacter] = useState<Character | null>(null);
+
   /* ── Handlers ── */
   const handleEdit = useCallback((ch: Character) => {
     setEditingCharacter(ch);
@@ -85,6 +89,11 @@ export function useCharactersCanvas({ project_id, director_persona }: UseCharact
       relationships: ch.relationships ? [...ch.relationships] : [],
     });
     setFormOpen(true);
+  }, []);
+
+  const handleOpenVisuals = useCallback((ch: Character) => {
+    setVisualsCharacter(ch);
+    setVisualsOpen(true);
   }, []);
 
   const handleDeleteConfirm = useCallback((ch: Character) => {
@@ -155,10 +164,12 @@ Focus on dramatic depth: what drives them, what holds them back, how they transf
   const handleRegenerateRef = useRef(handleRegenerate);
   const handleDeleteRef = useRef(handleDeleteConfirm);
   const handleBulkDeleteRef = useRef(handleBulkDeleteConfirm);
+  const handleOpenVisualsRef = useRef(handleOpenVisuals);
   handleEditRef.current = handleEdit;
   handleRegenerateRef.current = handleRegenerate;
   handleDeleteRef.current = handleDeleteConfirm;
   handleBulkDeleteRef.current = handleBulkDeleteConfirm;
+  handleOpenVisualsRef.current = handleOpenVisuals;
 
   /* ── Graph builder helper ── */
   const buildCurrentGraph = useCallback(() => {
@@ -166,6 +177,7 @@ Focus on dramatic depth: what drives them, what holds them back, how they transf
       onEdit: (ch: Character) => handleEditRef.current(ch),
       onRegenerate: (ch: Character) => handleRegenerateRef.current(ch),
       onDelete: (ch: Character) => handleDeleteRef.current(ch),
+      onOpenVisuals: (ch: Character) => handleOpenVisualsRef.current(ch),
       regeneratingId,
     });
   }, [sortedCharacters, regeneratingId]);
@@ -408,5 +420,10 @@ Rules:
     // Canvas actions
     handleReorganize,
     navigateToNode,
+
+    // Visuals
+    visualsOpen,
+    setVisualsOpen,
+    visualsCharacter,
   };
 }

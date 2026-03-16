@@ -155,14 +155,14 @@ export default function LoginPage() {
         <motion.div className="w-full" variants={itemVariants}>
           <div className="rounded-2xl border border-white/[0.06] bg-white/[0.025] p-5 backdrop-blur-2xl">
             <Button
-                className="h-[52px] w-full gap-3 rounded-xl border-white/[0.08] bg-white/[0.04] text-[15px] font-medium text-white/90 transition-all duration-300 ease-out hover:border-amber-400/20 hover:bg-white/[0.08] hover:shadow-[0_0_30px_rgba(251,191,36,0.05)] active:opacity-80"
-                size="lg"
-                variant="outline"
-                onClick={signIn}
-              >
-                <GoogleIcon className="h-[18px] w-[18px]" />
-                Continue with Google
-              </Button>
+              className="h-[52px] w-full gap-3 rounded-xl border-white/[0.08] bg-white/[0.04] text-[15px] font-medium text-white/90 transition-all duration-300 ease-out hover:border-amber-400/20 hover:bg-white/[0.08] hover:shadow-[0_0_30px_rgba(251,191,36,0.05)] active:opacity-80"
+              size="lg"
+              variant="outline"
+              onClick={signIn}
+            >
+              <GoogleIcon className="h-[18px] w-[18px]" />
+              Continue with Google
+            </Button>
 
             <div className="mt-5 flex items-center gap-3">
               <div className="h-px flex-1 bg-white/[0.05]" />

@@ -19,3 +19,12 @@ export function useGenerateImageMutation() {
     },
   });
 }
+
+export function useGenerateCharacterVisualsMutation() {
+  return useMutation({
+    mutationFn: api.generateCharacterVisuals,
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to generate character visuals');
+    },
+  });
+}

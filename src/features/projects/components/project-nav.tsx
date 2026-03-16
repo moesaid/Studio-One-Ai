@@ -18,6 +18,7 @@ interface ProjectNavProps {
   onDelete: () => void;
   onChangeDirector: () => void;
   onChangeStyle: () => void;
+
 }
 
 export function ProjectNav({
@@ -26,6 +27,7 @@ export function ProjectNav({
   onDelete,
   onChangeDirector,
   onChangeStyle,
+
 }: ProjectNavProps) {
   const status = PROJECT_STATUS_CONFIG[project.status];
   const persona = project.director_persona;
@@ -92,6 +94,7 @@ export function ProjectNav({
             </Tooltip>
           </>
         )}
+
       </div>
 
       {/* Right — actions */}

@@ -4,7 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 export const TEXT_MODEL = 'gemini-2.5-flash';
 
 /** Default image model */
-export const IMAGE_MODEL = 'imagen-3.0-generate-002';
+export const IMAGE_MODEL = 'imagen-4.0-generate-001';
 
 /**
  * Create a Google Gen AI client with the given API key.

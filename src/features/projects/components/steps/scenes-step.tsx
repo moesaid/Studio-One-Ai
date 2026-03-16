@@ -1,56 +1,103 @@
 'use client';
 
-import { Clapperboard, Plus, Layers } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Loader2 } from 'lucide-react';
+import { useScenes } from '@/features/projects/hooks';
+import type { ScenesStepProps } from '@/features/projects/types';
+import {
+  SceneCard,
+  SceneFormDialog,
+  SceneDeleteDialog,
+  SceneExtractDialog,
+  ScenesEmptyState,
+  ScenesToolbar,
+} from '../scenes';
 
-export function ScenesStep() {
+/* ── Scenes Step — storyboard-style scene list ── */
+
+export function ScenesStep({ project_id, director_persona, film_style }: ScenesStepProps) {
+  const s = useScenes({ project_id, director_persona });
+
+  /* Loading */
+  if (s.isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  /* Empty state */
+  if (s.sortedScenes.length === 0) {
+    return (
+      <ScenesEmptyState
+        hasChapters={s.chapters.length > 0}
+        extractLoading={s.extractLoading}
+        extractStep={s.extractStep}
+        onExtract={s.handleExtractFromScript}
+        onAdd={s.openCreateForm}
+      />
+    );
+  }
+
+  /* Main view — toolbar + scrollable scene list */
   return (
     <div className="flex h-full flex-col">
-      {/* Step header */}
-      <div className="flex items-center justify-between border-b border-border/50 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-500/10">
-            <Clapperboard className="h-4 w-4 text-amber-400" />
-          </div>
-          <div>
-            <h2 className="text-base font-semibold text-foreground">Scenes</h2>
-            <p className="text-xs text-muted-foreground">Break your story into visual scenes</p>
-          </div>
+      <ScenesToolbar
+        sceneCount={s.scenes.length}
+        hasChapters={s.chapters.length > 0}
+        extractLoading={s.extractLoading}
+        searchQuery={s.searchQuery}
+        onSearchChange={s.setSearchQuery}
+        onExtract={s.handleExtractFromScript}
+        onAdd={s.openCreateForm}
+      />
+
+      {/* Scene cards — storyboard list */}
+      <div className="flex-1 overflow-auto p-6">
+        <div className="mx-auto max-w-3xl space-y-3">
+          {s.filteredScenes.map((scene) => (
+            <SceneCard
+              key={scene.id}
+              scene={scene}
+              characters={s.characters}
+              isSelected={s.selectedId === scene.id}
+              onSelect={(sc) => s.setSelectedId(sc.id)}
+              onEdit={s.openEditForm}
+              onDelete={s.openDeleteDialog}
+            />
+          ))}
+          {s.filteredScenes.length === 0 && s.searchQuery && (
+            <div className="py-12 text-center">
+              <p className="text-sm text-muted-foreground">No scenes match &ldquo;{s.searchQuery}&rdquo;</p>
+            </div>
+          )}
         </div>
-        <Button size="sm">
-          <Plus className="mr-2 h-3.5 w-3.5" />
-          Add Scene
-        </Button>
       </div>
 
-      {/* Scenes content */}
-      <div className="flex-1 overflow-auto p-6">
-        <div className="mx-auto max-w-4xl">
-          <Card className="py-0">
-            <CardContent className="pt-8 pb-8">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-500/5 ring-1 ring-amber-500/10">
-                  <Layers className="h-6 w-6 text-amber-400/70" strokeWidth={1.5} />
-                </div>
-                <div className="space-y-1.5">
-                  <h3 className="text-sm font-semibold text-foreground">
-                    Build Your Scenes
-                  </h3>
-                  <p className="max-w-sm text-xs text-muted-foreground leading-relaxed">
-                    Break your script into individual scenes. Assign characters, set locations,
-                    and describe the visual direction for each scene.
-                  </p>
-                </div>
-                <Button variant="outline" size="sm" className="mt-2">
-                  <Layers className="mr-2 h-3.5 w-3.5" />
-                  Auto-Split from Script
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Dialogs */}
+      <SceneFormDialog
+        open={s.formOpen}
+        onOpenChange={s.setFormOpen}
+        editingScene={s.editingScene}
+        formData={s.formData}
+        setFormData={s.setFormData}
+        onSubmit={s.handleFormSubmit}
+        isPending={s.isFormPending}
+        characters={s.characters}
+      />
+
+      <SceneDeleteDialog
+        open={s.deleteDialogOpen}
+        onOpenChange={s.setDeleteDialogOpen}
+        scene={s.deleteTarget}
+        onConfirm={s.handleDelete}
+        isDeleting={s.isDeletePending}
+      />
+
+      <SceneExtractDialog
+        open={s.extractLoading}
+        currentStep={s.extractStep}
+      />
     </div>
   );
 }

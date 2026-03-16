@@ -59,6 +59,8 @@ export default function ProjectDetailPage({
   const hasStyle = !!project?.film_style;
   const isSetupComplete = hasPersona && hasStyle;
 
+
+
   // Derive setup step: 1 = director, 2 = style
   const setupStep = !hasPersona ? 1 : !hasStyle ? 2 : 0;
 
@@ -142,8 +144,8 @@ export default function ProjectDetailPage({
           {/* Right — step content */}
           <div className="flex-1 overflow-hidden">
             {activeStep === 'script' && <ScriptStep project_id={id} director_persona={project.director_persona} />}
-            {activeStep === 'characters' && <CharactersStep project_id={id} director_persona={project.director_persona} />}
-            {activeStep === 'scenes' && <ScenesStep />}
+            {activeStep === 'characters' && <CharactersStep project_id={id} director_persona={project.director_persona} film_style={project.film_style} />}
+            {activeStep === 'scenes' && <ScenesStep project_id={id} director_persona={project.director_persona} film_style={project.film_style} />}
             {activeStep === 'generate' && <GenerateStep />}
             {activeStep === 'edit' && <EditStep />}
             {activeStep === 'export' && <ExportStep />}

@@ -30,11 +30,13 @@ export function CharactersQuickNav({ characters, onNavigate }: CharactersQuickNa
               const nodeId = `char-${ch.id}`;
               const hasImages = ch.reference_images && ch.reference_images.length > 0;
               return (
-                <button
+                <div
                   key={ch.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   className="w-full flex items-center gap-2 px-3 py-1.5 text-left hover:bg-muted/40 transition-colors cursor-pointer"
                   onClick={() => onNavigate(nodeId)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onNavigate(nodeId); }}
                 >
                   <div className={`h-2 w-2 rounded-full bg-gradient-to-r ${role.accent} flex-shrink-0`} />
                   <span className="text-[11px] text-foreground/80 truncate">{ch.name}</span>
@@ -48,11 +50,11 @@ export function CharactersQuickNav({ characters, onNavigate }: CharactersQuickNa
                     </TooltipTrigger>
                     <TooltipContent side="right" className="text-[10px]">
                       {hasImages
-                        ? `${ch.reference_images.length} reference image${ch.reference_images.length > 1 ? 's' : ''}`
-                        : 'No reference images'}
+                        ? `${ch.reference_images.length} visual${ch.reference_images.length > 1 ? 's' : ''} generated`
+                        : 'No visuals yet'}
                     </TooltipContent>
                   </Tooltip>
-                </button>
+                </div>
               );
             })}
           </div>

@@ -16,6 +16,7 @@ export function buildGraph(
     onEdit: (ch: Character) => void;
     onRegenerate: (ch: Character) => void;
     onDelete: (ch: Character) => void;
+    onOpenVisuals: (ch: Character) => void;
     regeneratingId: string | null;
   }
 ): { nodes: Node[]; edges: Edge[] } {
@@ -61,6 +62,7 @@ export function buildGraph(
         onEdit: handlers.onEdit,
         onRegenerate: handlers.onRegenerate,
         onDelete: handlers.onDelete,
+        onOpenVisuals: handlers.onOpenVisuals,
         regeneratingId: handlers.regeneratingId,
       },
     });

@@ -18,6 +18,9 @@ export const ROLES: CharacterRole[] = ['protagonist', 'antagonist', 'supporting'
 
 export const CHARACTER_JSON_SCHEMA = `{
   "name": "CHARACTER NAME",
+  "gender": "male|female",
+  "age": 30,
+  "species": "human|animal",
   "role": "protagonist|antagonist|supporting|mentor|comic_relief|love_interest|other",
   "description": "2-3 sentence personality and motivation summary",
   "traits": ["defining personality trait 1", "trait 2", "trait 3"],

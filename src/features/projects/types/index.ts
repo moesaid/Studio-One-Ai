@@ -81,10 +81,16 @@ export interface CharacterRelationship {
   label: string;
 }
 
+export type CharacterGender = 'male' | 'female';
+export type CharacterSpecies = 'human' | 'animal';
+
 export interface Character {
   id: string;
   project_id: string;
   name: string;
+  gender: CharacterGender;
+  age: number;
+  species: CharacterSpecies;
   role: CharacterRole;
   description: string;
   traits: string[];
@@ -104,6 +110,9 @@ export interface Character {
 
 export interface CreateCharacterPayload {
   name: string;
+  gender?: CharacterGender;
+  age?: number;
+  species?: CharacterSpecies;
   role?: CharacterRole;
   description?: string;
   traits?: string[];
@@ -121,6 +130,9 @@ export interface CreateCharacterPayload {
 
 export interface UpdateCharacterPayload {
   name?: string;
+  gender?: CharacterGender;
+  age?: number;
+  species?: CharacterSpecies;
   role?: CharacterRole;
   description?: string;
   traits?: string[];
@@ -141,6 +153,7 @@ export interface UpdateCharacterPayload {
 export interface CharactersStepProps {
   project_id: string;
   director_persona: DirectorPersona | null;
+  film_style: FilmStyle | null;
 }
 
 export interface CharacterNodeData {
@@ -148,6 +161,7 @@ export interface CharacterNodeData {
   onEdit: (ch: Character) => void;
   onRegenerate: (ch: Character) => void;
   onDelete: (ch: Character) => void;
+  onOpenVisuals: (ch: Character) => void;
   regeneratingId: string | null;
   [key: string]: unknown;
 }
@@ -159,3 +173,67 @@ export interface ScriptStepProps {
   director_persona: DirectorPersona | null;
 }
 
+/* ── Scenes ── */
+
+export type TimeOfDay = 'day' | 'night' | 'dawn' | 'dusk' | 'evening';
+export type SceneMood = 'tense' | 'romantic' | 'comedic' | 'dramatic' | 'peaceful' | 'mysterious' | 'action' | 'melancholic' | 'triumphant' | 'horror';
+
+export interface Scene {
+  id: string;
+  project_id: string;
+  chapter_id: string | null;
+  title: string;
+  description: string;
+  visual_description: string;
+  action: string;
+  dialogue: string;
+  location: string;
+  time_of_day: TimeOfDay;
+  mood: SceneMood;
+  characters: string[];
+  camera_notes: string;
+  image_prompts: string[];
+  reference_images: string[];
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateScenePayload {
+  chapter_id?: string | null;
+  title: string;
+  description?: string;
+  visual_description?: string;
+  action?: string;
+  dialogue?: string;
+  location?: string;
+  time_of_day?: TimeOfDay;
+  mood?: SceneMood;
+  characters?: string[];
+  camera_notes?: string;
+  image_prompts?: string[];
+  reference_images?: string[];
+  order?: number;
+}
+
+export interface UpdateScenePayload {
+  title?: string;
+  description?: string;
+  visual_description?: string;
+  action?: string;
+  dialogue?: string;
+  location?: string;
+  time_of_day?: TimeOfDay;
+  mood?: SceneMood;
+  characters?: string[];
+  camera_notes?: string;
+  image_prompts?: string[];
+  reference_images?: string[];
+  order?: number;
+}
+
+export interface ScenesStepProps {
+  project_id: string;
+  director_persona: DirectorPersona | null;
+  film_style: FilmStyle | null;
+}

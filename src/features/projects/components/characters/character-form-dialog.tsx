@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { TagInput } from './tag-input';
 import { ROLE_CONFIG, ROLES } from '@/features/projects/constants/characters';
-import type { Character, CharacterRole, CreateCharacterPayload } from '@/features/projects/types';
+import type { Character, CharacterRole, CharacterGender, CharacterSpecies, CreateCharacterPayload } from '@/features/projects/types';
 
 interface CharacterFormDialogProps {
   open: boolean;
@@ -64,6 +64,36 @@ export function CharacterFormDialog({
                   <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>{ROLES.map((r) => <SelectItem key={r} value={r} className="text-sm">{ROLE_CONFIG[r].label}</SelectItem>)}</SelectContent>
                 </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Age</Label>
+                <Input type="number" min={1} max={150} value={formData.age ?? 25} onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 25 })} className="h-8 text-sm" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label className="text-xs">Species</Label>
+                <Select value={formData.species ?? 'human'} onValueChange={(v) => setFormData({ ...formData, species: v as CharacterSpecies })}>
+                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="human" className="text-sm">🧑 Human</SelectItem>
+                    <SelectItem value="animal" className="text-sm">🐾 Animal</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Gender</Label>
+                <Select value={formData.gender ?? 'male'} onValueChange={(v) => setFormData({ ...formData, gender: v as CharacterGender })}>
+                  <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male" className="text-sm">Male</SelectItem>
+                    <SelectItem value="female" className="text-sm">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-xs">Age</Label>
+                <Input type="number" min={1} max={150} value={formData.age ?? 25} onChange={(e) => setFormData({ ...formData, age: parseInt(e.target.value) || 25 })} className="h-8 text-sm" />
               </div>
             </div>
             <div className="space-y-1.5">
