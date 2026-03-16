@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Film, FolderOpen, Settings, Sparkles, LayoutDashboard } from 'lucide-react';
+import { FolderOpen, Settings, LayoutDashboard } from 'lucide-react';
 import { StudioOneLogo } from '@/components/shared/icons';
 import {
   Sidebar,
@@ -20,8 +20,6 @@ import { useAuth } from '@/features/auth';
 
 const mainNavItems = [
   { label: 'Projects', href: '/studio', icon: FolderOpen },
-  { label: 'Generate', href: '/studio/generate', icon: Sparkles },
-  { label: 'Library', href: '/studio/library', icon: Film },
 ];
 
 const bottomNavItems = [
