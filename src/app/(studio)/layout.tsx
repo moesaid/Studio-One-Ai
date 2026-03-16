@@ -14,7 +14,7 @@ export default function StudioLayout({
 }) {
   const pathname = usePathname();
   // Only collapse on dynamic project pages (/studio/[id]), not static routes
-  const STATIC_ROUTES = ['settings', 'generate', 'library'];
+  const STATIC_ROUTES = ['settings'];
   const segments = pathname.split('/');
   const isProjectPage =
     segments.length === 3 &&
