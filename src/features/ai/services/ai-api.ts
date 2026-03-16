@@ -1,5 +1,3 @@
-import { getApiKeyByProvider } from '@/features/settings/services/api-keys-storage';
-
 export interface GenerateTextPayload {
   prompt: string;
   system_instruction?: string;
@@ -19,30 +17,15 @@ export interface GenerateImageResponse {
 }
 
 /**
- * Get the Gemini API key from localStorage.
- * Throws if not configured.
- */
-function getGeminiKey(): string {
-  const entry = getApiKeyByProvider('gemini');
-  if (!entry?.key) {
-    throw new Error('Gemini API key not configured. Go to Settings to add it.');
-  }
-  return entry.key;
-}
-
-/**
- * Generate text via Gemini.
+ * Generate text via Vertex AI (Gemini).
  */
 export async function generateText(
   payload: GenerateTextPayload
 ): Promise<{ data: GenerateTextResponse }> {
-  const apiKey = getGeminiKey();
-
   const res = await fetch('/api/ai/generate-text', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
     },
     body: JSON.stringify({
       prompt: payload.prompt,
@@ -59,18 +42,15 @@ export async function generateText(
 }
 
 /**
- * Generate an image via Imagen.
+ * Generate an image via Vertex AI (Imagen).
  */
 export async function generateImage(
   payload: GenerateImagePayload
 ): Promise<{ data: GenerateImageResponse }> {
-  const apiKey = getGeminiKey();
-
   const res = await fetch('/api/ai/generate-image', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
     },
     body: JSON.stringify({ prompt: payload.prompt }),
   });
@@ -94,6 +74,7 @@ export interface GenerateCharacterVisualsPayload {
   film_style_prompt?: string;
   expressions?: string[];
   custom_instruction?: string;
+  model?: string;
 }
 
 export interface GeneratedVisualImage {
@@ -108,19 +89,16 @@ export interface GenerateCharacterVisualsResponse {
 }
 
 /**
- * Generate character visuals via Imagen API.
+ * Generate character visuals via Vertex AI image generation pipeline.
  * Produces 4 images with consistent character description across expressions.
  */
 export async function generateCharacterVisuals(
   payload: GenerateCharacterVisualsPayload
 ): Promise<{ data: GenerateCharacterVisualsResponse }> {
-  const apiKey = getGeminiKey();
-
   const res = await fetch('/api/ai/generate-character-visuals', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': apiKey,
     },
     body: JSON.stringify({
       appearance: payload.appearance,
@@ -131,6 +109,7 @@ export async function generateCharacterVisuals(
       filmStylePrompt: payload.film_style_prompt,
       expressions: payload.expressions,
       customInstruction: payload.custom_instruction,
+      model: payload.model,
     }),
   });
 
@@ -142,3 +121,210 @@ export async function generateCharacterVisuals(
   return res.json();
 }
 
+/* ── Scene Images ── */
+
+export interface GenerateSceneImagesPayload {
+  scene_title: string;
+  visual_description: string;
+  location: string;
+  time_of_day: string;
+  mood: string;
+  image_prompts: string[];
+  characters: {
+    name: string;
+    appearance: string;
+    gender?: string;
+    age?: number;
+    reference_image_urls?: string[];
+  }[];
+  film_style_prompt: string;
+  film_style_name?: string;
+  film_style_category?: string;
+  film_style_description?: string;
+  director_instruction: string;
+  director_name?: string;
+  director_style?: string;
+  director_description?: string;
+  image_model?: string;
+  /** base64-encoded project poster, used as style anchor for consistency */
+  style_anchor?: string;
+}
+
+export interface GeneratedSceneImage {
+  image_bytes: string;
+  mime_type: string;
+  frame_label: string;
+}
+
+export interface GenerateSceneImagesResponse {
+  images: GeneratedSceneImage[];
+  count: number;
+}
+
+/**
+ * Generate keyframe images for a scene using the Vertex AI image generation pipeline.
+ */
+export async function generateSceneImages(
+  payload: GenerateSceneImagesPayload
+): Promise<{ data: GenerateSceneImagesResponse }> {
+  const res = await fetch('/api/ai/generate-scene-images', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to generate scene images');
+  }
+
+  return res.json();
+}
+
+/* ── Project Poster ── */
+
+export interface GenerateProjectPosterPayload {
+  project_title: string;
+  project_description: string;
+  characters: {
+    name: string;
+    appearance: string;
+    gender?: string;
+    age?: number;
+    reference_image_urls?: string[];
+  }[];
+  film_style_prompt: string;
+  film_style_name?: string;
+  film_style_category?: string;
+  film_style_description?: string;
+  director_instruction: string;
+  director_name?: string;
+  director_style?: string;
+  director_description?: string;
+  image_model?: string;
+}
+
+export interface GenerateProjectPosterResponse {
+  image_bytes: string;
+  mime_type: string;
+}
+
+/**
+ * Generate a project poster featuring all main characters.
+ * Used as project thumbnail and style anchor for scene consistency.
+ */
+export async function generateProjectPoster(
+  payload: GenerateProjectPosterPayload
+): Promise<{ data: GenerateProjectPosterResponse }> {
+  const res = await fetch('/api/ai/generate-project-poster', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to generate project poster');
+  }
+
+  return res.json();
+}
+
+/* ── Video Clip Generation (Veo) ── */
+
+export interface GenerateVideoClipPayload {
+  image_base64?: string;
+  image_mime_type?: string;
+  prompt?: string;
+  video_model?: string;
+  duration?: number;
+  aspect_ratio?: string;
+  resolution?: string;
+  generate_audio?: boolean;
+  person_generation?: string;
+  negative_prompt?: string;
+  director_name?: string;
+  director_style?: string;
+  film_style_name?: string;
+  film_style_description?: string;
+  scene_title?: string;
+  scene_description?: string;
+}
+
+export async function generateVideoClip(
+  payload: GenerateVideoClipPayload
+): Promise<{ operation_name: string }> {
+  const res = await fetch('/api/ai/generate-video-clip', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to start video generation');
+  }
+
+  return res.json();
+}
+
+/* ── Poll Video Operation ── */
+
+export interface PollVideoOperationResponse {
+  done: boolean;
+  videos?: { gcs_uri: string | null; bytes_base64: string | null; mime_type: string }[];
+  error?: string;
+}
+
+export async function pollVideoOperation(
+  operationName: string
+): Promise<PollVideoOperationResponse> {
+  const res = await fetch('/api/ai/poll-video-operation', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ operation_name: operationName }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to poll video operation');
+  }
+
+  return res.json();
+}
+
+/* ── Music Generation (Lyria) ── */
+
+export interface GenerateMusicPayload {
+  prompt: string;
+  negative_prompt?: string;
+  director_name?: string;
+  director_style?: string;
+  film_style_name?: string;
+  scene_title?: string;
+  scene_mood?: string;
+}
+
+export interface GenerateMusicResponse {
+  audio_content: string;
+  mime_type: string;
+}
+
+export async function generateMusic(
+  payload: GenerateMusicPayload
+): Promise<GenerateMusicResponse> {
+  const res = await fetch('/api/ai/generate-music', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.error || 'Failed to generate music');
+  }
+
+  return res.json();
+}

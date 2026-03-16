@@ -6,3 +6,5 @@ export { useProjects } from './use-projects';
 export { useCharactersCanvas } from './use-characters-canvas';
 export { useScriptEditor } from './use-script-editor';
 export { useScenes } from './use-scenes';
+export { useVideoClipsQuery } from './use-video-clips-query';
+export { useVideoClips } from './use-video-clips';

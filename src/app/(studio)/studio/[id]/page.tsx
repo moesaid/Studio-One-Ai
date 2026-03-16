@@ -145,9 +145,9 @@ export default function ProjectDetailPage({
           <div className="flex-1 overflow-hidden">
             {activeStep === 'script' && <ScriptStep project_id={id} director_persona={project.director_persona} />}
             {activeStep === 'characters' && <CharactersStep project_id={id} director_persona={project.director_persona} film_style={project.film_style} />}
-            {activeStep === 'scenes' && <ScenesStep project_id={id} director_persona={project.director_persona} film_style={project.film_style} />}
-            {activeStep === 'generate' && <GenerateStep />}
-            {activeStep === 'edit' && <EditStep />}
+            {activeStep === 'scenes' && <ScenesStep project_id={id} project_title={project.title} project_description={project.description} director_persona={project.director_persona} film_style={project.film_style} />}
+            {activeStep === 'generate' && <GenerateStep project_id={id} project_title={project.title} project_description={project.description} director_persona={project.director_persona} film_style={project.film_style} />}
+            {activeStep === 'edit' && <EditStep project_id={id} />}
             {activeStep === 'export' && <ExportStep />}
           </div>
         </div>

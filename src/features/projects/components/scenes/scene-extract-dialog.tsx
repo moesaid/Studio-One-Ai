@@ -7,9 +7,10 @@ import { SCENE_EXTRACT_STEPS } from '@/features/projects/constants/scenes';
 interface SceneExtractDialogProps {
   open: boolean;
   currentStep: number;
+  progress?: string;
 }
 
-export function SceneExtractDialog({ open, currentStep }: SceneExtractDialogProps) {
+export function SceneExtractDialog({ open, currentStep, progress }: SceneExtractDialogProps) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent className="max-w-sm [&>button]:hidden">
@@ -21,7 +22,7 @@ export function SceneExtractDialog({ open, currentStep }: SceneExtractDialogProp
           </div>
           <div className="text-center space-y-1">
             <h3 className="text-sm font-semibold text-foreground">Extracting Scenes</h3>
-            <p className="text-xs text-muted-foreground">AI is analyzing your screenplay and breaking it into scenes</p>
+            <p className="text-xs text-muted-foreground">AI is analyzing your screenplay and generating scene visuals</p>
           </div>
           <div className="w-full space-y-2">
             {SCENE_EXTRACT_STEPS.map((step, i) => {
@@ -63,8 +64,14 @@ export function SceneExtractDialog({ open, currentStep }: SceneExtractDialogProp
               );
             })}
           </div>
+          {/* Current scene progress */}
+          {progress && (
+            <p className="text-[11px] text-amber-400/80 font-medium truncate max-w-full">
+              {progress}
+            </p>
+          )}
           <p className="text-[10px] text-muted-foreground/50">
-            This may take 30-60 seconds depending on script length
+            This may take 2-5 minutes depending on script length and number of scenes
           </p>
         </div>
       </DialogContent>

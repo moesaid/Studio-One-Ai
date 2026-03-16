@@ -1,18 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createGenAIClient } from '@/lib/genai';
-
-/**
- * Character visual generation using Gemini 2.5 Flash with native
- * image output via generateContent + responseModalities.
- *
- * Falls back through multiple models to find one that works
- * on the user's current API tier.
- */
-const IMAGE_MODELS = [
-  'gemini-2.5-flash',          // 5 RPM / 20 RPD on free tier
-  'gemini-2.0-flash',          // fallback
-  'imagen-4.0-generate-001',   // requires paid plan
-];
+import { createGenAIClient, buildModelCascade } from '@/lib/genai';
 
 /**
  * The 4 expressions we generate for character visual consistency.
@@ -45,23 +32,43 @@ const EXPRESSIONS = [
 ];
 
 /**
- * Try generateContent with image modalities on a Gemini model.
+ * Generate an image via generateContent with optional reference image.
+ * When a reference image is provided, the model is instructed to keep
+ * the SAME character identity (face, body, clothes, colors).
  */
-async function tryGenerateContent(
+async function generateImage(
   ai: ReturnType<typeof createGenAIClient>,
   model: string,
-  prompt: string
+  prompt: string,
+  referenceImage?: { data: string; mimeType: string }
 ): Promise<{ data: string; mimeType: string } | null> {
+  const parts: Array<{ text: string } | { inlineData: { data: string; mimeType: string } }> = [];
+
+  if (referenceImage) {
+    // Attach the reference image first so the model "sees" the character
+    parts.push({
+      inlineData: {
+        data: referenceImage.data,
+        mimeType: referenceImage.mimeType,
+      },
+    });
+    parts.push({
+      text: `This is a reference image of a character. Generate a NEW portrait of the EXACT SAME character — same face, same skin tone, same hair style and color, same body type, same clothing. Only change the expression and pose as described: ${prompt}. The character must be recognizably the same person.`,
+    });
+  } else {
+    parts.push({ text: prompt });
+  }
+
   const response = await ai.models.generateContent({
     model,
-    contents: prompt,
+    contents: [{ role: 'user', parts }],
     config: {
       responseModalities: ['IMAGE', 'TEXT'],
     },
   });
 
-  const parts = response.candidates?.[0]?.content?.parts ?? [];
-  for (const part of parts) {
+  const responseParts = response.candidates?.[0]?.content?.parts ?? [];
+  for (const part of responseParts) {
     if (part.inlineData?.data) {
       return {
         data: part.inlineData.data,
@@ -72,46 +79,13 @@ async function tryGenerateContent(
   return null;
 }
 
-/**
- * Try generateImages with an Imagen model.
- */
-async function tryGenerateImages(
-  ai: ReturnType<typeof createGenAIClient>,
-  model: string,
-  prompt: string
-): Promise<{ data: string; mimeType: string } | null> {
-  const response = await ai.models.generateImages({
-    model,
-    prompt,
-    config: { numberOfImages: 1 },
-  });
-
-  const image = response.generatedImages?.[0];
-  if (image?.image?.imageBytes) {
-    const bytes = image.image.imageBytes;
-    return {
-      data:
-        typeof bytes === 'string'
-          ? bytes
-          : Buffer.from(bytes).toString('base64'),
-      mimeType: 'image/png',
-    };
-  }
-  return null;
-}
-
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = request.headers.get('x-api-key');
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API key is required. Add your Gemini key in Settings.' },
-        { status: 401 }
-      );
-    }
-
     const body = await request.json();
-    const { appearance, gender, age, species, directorInstruction, filmStylePrompt, expressions, customInstruction } = body;
+    const { appearance, gender, age, species, directorInstruction, filmStylePrompt, expressions, customInstruction, model } = body;
+
+    // Build model cascade: user-preferred model first, then fallbacks
+    const IMAGE_MODELS = buildModelCascade(model);
 
     if (!appearance || typeof appearance !== 'string') {
       return NextResponse.json(
@@ -120,7 +94,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const ai = createGenAIClient(apiKey);
+    const ai = createGenAIClient();
 
     const stylePrefix = filmStylePrompt
       ? `${filmStylePrompt} style`
@@ -139,21 +113,21 @@ export async function POST(request: NextRequest) {
       ? EXPRESSIONS.filter((e) => expressions.includes(e.id))
       : EXPRESSIONS;
 
-    // Find a working model by trying the first expression
-    let workingModel: string | null = null;
-    let useImagen = false;
-    // Build character identity prefix from gender + age
+    // Build explicit character identity line (type + gender + age)
     const identityParts: string[] = [];
-    if (species === 'animal') identityParts.push('animal character');
+    const charType = species === 'animal' ? 'Animal' : 'Human';
+    identityParts.push(`${charType} character`);
     if (gender) identityParts.push(gender);
     if (age) identityParts.push(`${age} years old`);
-    const identityPrefix = identityParts.length > 0 ? `${identityParts.join(', ')} ` : '';
+    const identityLine = identityParts.join(', ');
 
-    const probeExpr = targetExpressions[0];
+    // ── Step 1: Generate the FIRST expression (anchor image) ──
+    const firstExpr = targetExpressions[0];
     const firstPrompt = [
       `${stylePrefix} character portrait illustration.`,
-      `Character: ${identityPrefix}${appearance}.`,
-      probeExpr.instruction + '.',
+      `Character identity: ${identityLine}.`,
+      `Appearance: ${appearance}.`,
+      firstExpr.instruction + '.',
       directorNote,
       customNote,
       'High quality, detailed, professional character concept art.',
@@ -161,19 +135,18 @@ export async function POST(request: NextRequest) {
       .filter(Boolean)
       .join(' ');
 
+    let workingModel: string | null = null;
+    let anchorImage: { data: string; mimeType: string } | null = null;
     const modelErrors: string[] = [];
 
     for (const model of IMAGE_MODELS) {
-      const isImagen = model.startsWith('imagen');
       try {
         console.log(`[generate-character-visuals] Trying model: ${model}`);
-        const result = isImagen
-          ? await tryGenerateImages(ai, model, firstPrompt)
-          : await tryGenerateContent(ai, model, firstPrompt);
+        const result = await generateImage(ai, model, firstPrompt);
 
         if (result) {
           workingModel = model;
-          useImagen = isImagen;
+          anchorImage = result;
           console.log(`[generate-character-visuals] ✅ Model works: ${model}`);
           break;
         } else {
@@ -186,17 +159,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!workingModel) {
-      return NextResponse.json(
-        {
-          error: `No image generation model available on your current plan. Tried: ${modelErrors.join(' | ')}. Please enable billing at https://ai.dev/projects to unlock image generation.`,
-        },
-        { status: 400 }
-      );
+    if (!workingModel || !anchorImage) {
+      const allQuotaExceeded = modelErrors.length > 0 && modelErrors.every((e) => e.includes('429') || e.toLowerCase().includes('quota'));
+      const friendlyError = allQuotaExceeded
+        ? 'You have hit the image generation rate limit. Please wait a minute or two and try again.'
+        : 'Image generation is temporarily unavailable. Please try again shortly or check your Google Cloud quota settings.';
+      console.error('[generate-character-visuals] All models failed:', modelErrors.join(' | '));
+      return NextResponse.json({ error: friendlyError }, { status: allQuotaExceeded ? 429 : 400 });
     }
 
-    // Now generate all 4 expressions with the working model
-    // (skip the first one if we already got it from the probe)
+    // ── Step 2: Store the anchor image ──
     const generatedImages: {
       image_bytes: string;
       mime_type: string;
@@ -204,10 +176,20 @@ export async function POST(request: NextRequest) {
     }[] = [];
     const errors: string[] = [];
 
-    for (const expr of targetExpressions) {
+    generatedImages.push({
+      image_bytes: anchorImage.data,
+      mime_type: anchorImage.mimeType,
+      expression: firstExpr.id,
+    });
+
+    // ── Step 3: Generate remaining expressions using anchor as reference ──
+    const remainingExpressions = targetExpressions.slice(1);
+
+    for (const expr of remainingExpressions) {
       const prompt = [
         `${stylePrefix} character portrait illustration.`,
-        `Character: ${identityPrefix}${appearance}.`,
+        `Character identity: ${identityLine}.`,
+        `Appearance: ${appearance}.`,
         expr.instruction + '.',
         directorNote,
         customNote,
@@ -217,9 +199,11 @@ export async function POST(request: NextRequest) {
         .join(' ');
 
       try {
-        const result = useImagen
-          ? await tryGenerateImages(ai, workingModel, prompt)
-          : await tryGenerateContent(ai, workingModel, prompt);
+        // Rate-limit delay between generations
+        await new Promise((r) => setTimeout(r, 1500));
+
+        // Pass anchor image as reference for consistency
+        const result = await generateImage(ai, workingModel, prompt, anchorImage);
 
         if (result) {
           generatedImages.push({

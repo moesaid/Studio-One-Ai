@@ -3,14 +3,6 @@ import { createGenAIClient, TEXT_MODEL } from '@/lib/genai';
 
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = request.headers.get('x-api-key');
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: 'API key is required. Add your Gemini key in Settings.' },
-        { status: 401 }
-      );
-    }
-
     const { prompt, systemInstruction } = await request.json();
 
     if (!prompt || typeof prompt !== 'string') {
@@ -20,7 +12,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const genai = createGenAIClient(apiKey);
+    const genai = createGenAIClient();
     const response = await genai.models.generateContent({
       model: TEXT_MODEL,
       contents: prompt,

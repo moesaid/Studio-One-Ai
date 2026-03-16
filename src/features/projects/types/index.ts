@@ -234,6 +234,67 @@ export interface UpdateScenePayload {
 
 export interface ScenesStepProps {
   project_id: string;
+  project_title: string;
+  project_description: string;
   director_persona: DirectorPersona | null;
   film_style: FilmStyle | null;
 }
+
+/* ── Video Clips ── */
+
+export type VideoClipStatus = 'pending' | 'generating' | 'done' | 'failed';
+
+export interface VideoClip {
+  id: string;
+  project_id: string;
+  scene_id: string;
+  keyframe_index: number;
+  video_url: string | null;
+  audio_url: string | null;
+  duration: number;
+  status: VideoClipStatus;
+  operation_name: string | null;
+  video_model: string;
+  error_message: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateVideoClipPayload {
+  scene_id: string;
+  keyframe_index: number;
+  duration: number;
+  video_model: string;
+  operation_name: string;
+}
+
+export interface GenerateStepProps {
+  project_id: string;
+  project_title: string;
+  project_description: string;
+  director_persona: DirectorPersona | null;
+  film_style: FilmStyle | null;
+}
+
+/* ── Edit Step (Video Editor) ── */
+
+export interface EditStepProps {
+  project_id: string;
+}
+
+/* ── Timeline ── */
+
+export interface TimelineItem {
+  id: string;
+  clip_id: string;
+  scene_id: string;
+  scene_title: string;
+  keyframe_index: number;
+  video_url: string;
+  thumbnail_url: string | null;
+  duration: number;
+  trim_start: number;
+  trim_end: number;
+  order: number;
+}
+

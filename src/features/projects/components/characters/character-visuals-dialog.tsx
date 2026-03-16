@@ -27,6 +27,12 @@ import { toast } from 'sonner';
 import type { Character, Project } from '@/features/projects/types';
 import { useGenerateCharacterVisualsMutation } from '@/features/ai/hooks/use-ai-query';
 import {
+  IMAGE_MODELS,
+  getPreferredImageModel,
+  setPreferredImageModel,
+  type ImageModelId,
+} from '@/lib/genai';
+import {
   uploadGeneratedVisuals,
   deleteCharacterVisual,
   uploadCharacterVisualFile,
@@ -73,6 +79,7 @@ export function CharacterVisualsDialog({
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [showCustomInstruction, setShowCustomInstruction] = useState(false);
   const [customInstruction, setCustomInstruction] = useState('');
+  const [selectedModel, setSelectedModel] = useState<ImageModelId>(getPreferredImageModel());
 
   const generateMutation = useGenerateCharacterVisualsMutation();
 
@@ -230,6 +237,7 @@ export function CharacterVisualsDialog({
         film_style_prompt: project?.film_style?.image_prompt,
         expressions: targetExpressions,
         custom_instruction: customInstruction || undefined,
+        model: selectedModel,
       });
 
       clearInterval(progressInterval);
@@ -491,13 +499,39 @@ export function CharacterVisualsDialog({
                 <Sparkles className="h-3.5 w-3.5" />
                 Generate Character Sheet
               </Button>
-              {!character.appearance && (
+            {!character.appearance && (
                 <p className="text-[10px] text-amber-400/70">
                   Add an appearance description to this character first.
                 </p>
               )}
             </div>
           )}
+
+          {/* ── Model selector ── */}
+          <div className="rounded-xl border border-border/20 bg-muted/5 p-3 space-y-2">
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-muted-foreground/50">
+              Image Model
+            </span>
+            <select
+              value={selectedModel}
+              onChange={(e) => {
+                const id = e.target.value as ImageModelId;
+                setSelectedModel(id);
+                setPreferredImageModel(id);
+              }}
+              disabled={isGenerating}
+              className="w-full h-9 rounded-lg border border-border/30 bg-background px-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-violet-500/50 disabled:opacity-50 cursor-pointer"
+            >
+              {IMAGE_MODELS.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label} — {m.description}
+                </option>
+              ))}
+            </select>
+            <p className="text-[10px] text-muted-foreground/50">
+              Select an Imagen model from Vertex AI. The app will try other models as fallback if the selected one fails.
+            </p>
+          </div>
 
           {/* ── Face reference upload ── */}
           <div className="rounded-xl border border-border/20 bg-muted/5 p-3 space-y-2">

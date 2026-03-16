@@ -1,13 +1,18 @@
 export const SCENE_JSON_SCHEMA = `{
   "title": "Scene title (e.g., 'The Confrontation')",
-  "description": "Visual direction and staging notes for this scene",
-  "action": "What physically happens — movement, gestures, events",
-  "dialogue": "Key dialogue lines in this scene (keep the most impactful lines)",
-  "location": "Specific setting (e.g., 'Dimly lit throne room', 'Busy Cairo marketplace')",
+  "description": "Brief one-line logline of the scene",
+  "visual_description": "A cinematographer-grade paragraph describing the exact visual composition. Include: blocking (where actors stand/move), lighting design (key light direction, color temperature, shadows), set design details, color palette, atmosphere, and any practical/VFX elements. This should read like a DP's shot notes — specific enough to generate a photorealistic image.",
+  "action": "What physically happens — movement, gestures, events. Be specific: 'Sarah slams her fist on the oak desk, scattering papers' not 'Sarah is angry'",
+  "dialogue": "Key dialogue lines in this scene (keep the most impactful 2-3 lines, with character names)",
+  "location": "Specific setting (e.g., 'Dimly lit throne room with vaulted stone ceilings', 'Crowded Cairo marketplace at golden hour')",
   "time_of_day": "day|night|dawn|dusk|evening",
   "mood": "tense|romantic|comedic|dramatic|peaceful|mysterious|action|melancholic|triumphant|horror",
   "characters": ["Character Name 1", "Character Name 2"],
-  "camera_notes": "Camera angles, movements, and framing suggestions"
+  "camera_notes": "Camera angles, movements, and framing (e.g., 'Opens wide establishing, tracks in to medium two-shot, cuts to tight close-up on reaction')",
+  "image_prompts": [
+    "Opening shot: [describe the scene's opening visual — wide establishing shot showing the full environment, all characters present with their positions, lighting, and mood]",
+    "Closing shot: [describe the scene's final moment — the dramatic peak or resolution, characters' final expressions and positions, any visual change from the opening]"
+  ]
 }`;
 
 export const SCENE_EXTRACT_STEPS = [
@@ -15,6 +20,8 @@ export const SCENE_EXTRACT_STEPS = [
   { label: 'Identifying scene breaks via AI...', icon: '🤖' },
   { label: 'Mapping characters to scenes...', icon: '🔗' },
   { label: 'Saving scenes to project...', icon: '💾' },
+  { label: 'Generating scene keyframe images...', icon: '🎨' },
+  { label: 'Uploading frames to storage...', icon: '☁️' },
 ];
 
 export const TIME_OF_DAY_OPTIONS = [

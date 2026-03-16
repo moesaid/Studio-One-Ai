@@ -28,3 +28,12 @@ export function useGenerateCharacterVisualsMutation() {
     },
   });
 }
+
+export function useGenerateSceneImagesMutation() {
+  return useMutation({
+    mutationFn: api.generateSceneImages,
+    onError: (error: Error) => {
+      toast.error(error.message || 'Failed to generate scene images');
+    },
+  });
+}

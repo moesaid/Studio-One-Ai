@@ -8,14 +8,15 @@ import {
   SceneFormDialog,
   SceneDeleteDialog,
   SceneExtractDialog,
+  SceneExtractConfigDialog,
   ScenesEmptyState,
   ScenesToolbar,
 } from '../scenes';
 
 /* ── Scenes Step — storyboard-style scene list ── */
 
-export function ScenesStep({ project_id, director_persona, film_style }: ScenesStepProps) {
-  const s = useScenes({ project_id, director_persona });
+export function ScenesStep({ project_id, project_title, project_description, director_persona, film_style }: ScenesStepProps) {
+  const s = useScenes({ project_id, project_title, project_description, director_persona, film_style });
 
   /* Loading */
   if (s.isLoading) {
@@ -29,13 +30,20 @@ export function ScenesStep({ project_id, director_persona, film_style }: ScenesS
   /* Empty state */
   if (s.sortedScenes.length === 0) {
     return (
-      <ScenesEmptyState
-        hasChapters={s.chapters.length > 0}
-        extractLoading={s.extractLoading}
-        extractStep={s.extractStep}
-        onExtract={s.handleExtractFromScript}
-        onAdd={s.openCreateForm}
-      />
+      <>
+        <ScenesEmptyState
+          hasChapters={s.chapters.length > 0}
+          extractLoading={s.extractLoading}
+          extractStep={s.extractStep}
+          onExtract={s.handleExtractFromScript}
+          onAdd={s.openCreateForm}
+        />
+        <SceneExtractConfigDialog
+          open={s.configDialogOpen}
+          onOpenChange={s.setConfigDialogOpen}
+          onConfirm={s.handleStartExtraction}
+        />
+      </>
     );
   }
 
@@ -52,9 +60,9 @@ export function ScenesStep({ project_id, director_persona, film_style }: ScenesS
         onAdd={s.openCreateForm}
       />
 
-      {/* Scene cards — storyboard list */}
+      {/* Scene cards — grid layout */}
       <div className="flex-1 overflow-auto p-6">
-        <div className="mx-auto max-w-3xl space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {s.filteredScenes.map((scene) => (
             <SceneCard
               key={scene.id}
@@ -66,12 +74,12 @@ export function ScenesStep({ project_id, director_persona, film_style }: ScenesS
               onDelete={s.openDeleteDialog}
             />
           ))}
-          {s.filteredScenes.length === 0 && s.searchQuery && (
-            <div className="py-12 text-center">
-              <p className="text-sm text-muted-foreground">No scenes match &ldquo;{s.searchQuery}&rdquo;</p>
-            </div>
-          )}
         </div>
+        {s.filteredScenes.length === 0 && s.searchQuery && (
+          <div className="py-12 text-center">
+            <p className="text-sm text-muted-foreground">No scenes match &ldquo;{s.searchQuery}&rdquo;</p>
+          </div>
+        )}
       </div>
 
       {/* Dialogs */}
@@ -84,6 +92,8 @@ export function ScenesStep({ project_id, director_persona, film_style }: ScenesS
         onSubmit={s.handleFormSubmit}
         isPending={s.isFormPending}
         characters={s.characters}
+        onRegenerateImage={s.handleRegenerateImage}
+        isRegenerating={s.isRegenerating}
       />
 
       <SceneDeleteDialog
@@ -97,6 +107,13 @@ export function ScenesStep({ project_id, director_persona, film_style }: ScenesS
       <SceneExtractDialog
         open={s.extractLoading}
         currentStep={s.extractStep}
+        progress={s.extractProgress}
+      />
+
+      <SceneExtractConfigDialog
+        open={s.configDialogOpen}
+        onOpenChange={s.setConfigDialogOpen}
+        onConfirm={s.handleStartExtraction}
       />
     </div>
   );

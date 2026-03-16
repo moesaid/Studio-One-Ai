@@ -13,15 +13,13 @@ export interface ProviderConfig {
 export const PROVIDERS: ProviderConfig[] = [
   {
     value: 'gemini',
-    label: 'Google Gemini',
-    description: 'Powers text generation (Gemini) and image generation (Imagen)',
-    url: 'https://aistudio.google.com/apikey',
+    label: 'Google Vertex AI',
+    description: 'Powers text generation (Gemini) and image generation (Imagen) via Vertex AI',
+    url: 'https://console.cloud.google.com/vertex-ai',
     steps: [
-      'Go to Google AI Studio (aistudio.google.com/apikey)',
-      'Sign in with your Google account',
-      'Click "Create API Key"',
-      'Select or create a Google Cloud project',
-      'Copy the generated API key and paste it below',
+      'Go to Google Cloud Console → Vertex AI (console.cloud.google.com/vertex-ai)',
+      'Enable the Vertex AI API for your project',
+      'AI features are now configured server-side — no API key needed in the app',
     ],
   },
 ];

@@ -83,6 +83,7 @@ export function useCharactersCanvas({ project_id, director_persona }: UseCharact
     setEditingCharacter(ch);
     setFormData({
       name: ch.name, role: ch.role, description: ch.description,
+      gender: ch.gender, age: ch.age, species: ch.species,
       traits: [...ch.traits], motivations: [...ch.motivations], flaws: [...ch.flaws],
       appearance: ch.appearance, backstory: ch.backstory, vibe: ch.vibe,
       arc: ch.arc, voice: ch.voice,
@@ -119,8 +120,21 @@ export function useCharactersCanvas({ project_id, director_persona }: UseCharact
     const allCharNames = characters.map((c) => c.name).join(', ');
     const personaPrefix = director_persona?.system_instruction ? director_persona.system_instruction + '\n\n' : '';
 
+    // Build identity constraints so regeneration respects user-set fields
+    const charType = character.species === 'animal' ? 'Animal' : 'Human';
+    const identityConstraint = [
+      `Character type: ${charType}`,
+      character.gender ? `Gender: ${character.gender}` : '',
+      character.age ? `Age: ${character.age} years old` : '',
+    ].filter(Boolean).join('. ');
+
     const systemPrompt = personaPrefix +
       `You are a screenplay character analyst. Regenerate the character bible entry for "${character.name}" based on the screenplay below.
+
+IMPORTANT — the following identity fields are SET BY THE USER and MUST be respected in ALL generated text (appearance, description, backstory, etc.):
+${identityConstraint}.
+Do NOT contradict these fields. For example, if gender is "female", all pronouns, descriptions, and references must use female language.
+
 Other characters in the story: ${allCharNames}
 
 You MUST respond with ONLY valid JSON — no markdown, no code fences, no extra text.
